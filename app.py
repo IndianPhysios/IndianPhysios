@@ -233,12 +233,7 @@ def send_email(to, subject, body):
 
     if IS_PRODUCTION:
         raise RuntimeError("Email is not configured. Set BREVO_API_KEY and BREVO_FROM_EMAIL.")
-    print("
-EMAIL (development mode)
-To:",to,"
-Subject:",subject,"
-",body,"
-")
+    print("\nEMAIL (development mode)\nTo:", to, "\nSubject:", subject, "\n", body, "\n")
     return False
 
 def verification_link(token):
