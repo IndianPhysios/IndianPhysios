@@ -1,4 +1,4 @@
-import os, re, secrets, sqlite3, smtplib
+import os, re, secrets, sqlite3, smtplib, json, urllib.request, urllib.error
 from email.message import EmailMessage
 from datetime import datetime, timedelta
 from functools import wraps
@@ -189,15 +189,57 @@ def current_user():
     c=db(); u=c.execute("SELECT * FROM users WHERE id=?",(uid,)).fetchone(); c.close(); return u
 
 def send_email(to, subject, body):
+    # Prefer Brevo's HTTPS API in production. This works on Render Free,
+    # where outbound SMTP ports are restricted.
+    brevo_key = os.environ.get("BREVO_API_KEY", "").strip()
+    brevo_from = os.environ.get("BREVO_FROM_EMAIL", "").strip()
+    brevo_name = os.environ.get("BREVO_FROM_NAME", "Indian Physios").strip() or "Indian Physios"
+
+    if brevo_key and brevo_from:
+        payload = json.dumps({
+            "sender": {"name": brevo_name, "email": brevo_from},
+            "to": [{"email": to}],
+            "subject": subject,
+            "textContent": body,
+        }).encode("utf-8")
+        req = urllib.request.Request(
+            "https://api.brevo.com/v3/smtp/email",
+            data=payload,
+            headers={
+                "accept": "application/json",
+                "api-key": brevo_key,
+                "content-type": "application/json",
+            },
+            method="POST",
+        )
+        try:
+            with urllib.request.urlopen(req, timeout=20) as response:
+                if response.status >= 300:
+                    raise RuntimeError(f"Brevo email request failed with HTTP {response.status}.")
+        except urllib.error.HTTPError as exc:
+            detail = exc.read().decode("utf-8", errors="replace")[:500]
+            raise RuntimeError(f"Brevo email request failed with HTTP {exc.code}: {detail}") from exc
+        except urllib.error.URLError as exc:
+            raise RuntimeError(f"Could not reach Brevo: {exc.reason}") from exc
+        return True
+
+    # Keep SMTP support as a fallback for non-Render deployments.
     host=os.environ.get("SMTP_HOST"); port=int(os.environ.get("SMTP_PORT","587")); user=os.environ.get("SMTP_USERNAME"); password=os.environ.get("SMTP_PASSWORD"); sender=os.environ.get("SMTP_FROM") or user
-    if not all([host,user,password,sender]):
-        if IS_PRODUCTION: raise RuntimeError("SMTP is not configured for production email.")
-        print("\nEMAIL (development mode)\nTo:",to,"\nSubject:",subject,"\n",body,"\n")
-        return False
-    msg=EmailMessage(); msg["From"]=sender; msg["To"]=to; msg["Subject"]=subject; msg.set_content(body)
-    with smtplib.SMTP(host,port,timeout=20) as s:
-        s.starttls(); s.login(user,password); s.send_message(msg)
-    return True
+    if all([host,user,password,sender]):
+        msg=EmailMessage(); msg["From"]=sender; msg["To"]=to; msg["Subject"]=subject; msg.set_content(body)
+        with smtplib.SMTP(host,port,timeout=20) as s:
+            s.starttls(); s.login(user,password); s.send_message(msg)
+        return True
+
+    if IS_PRODUCTION:
+        raise RuntimeError("Email is not configured. Set BREVO_API_KEY and BREVO_FROM_EMAIL.")
+    print("
+EMAIL (development mode)
+To:",to,"
+Subject:",subject,"
+",body,"
+")
+    return False
 
 def verification_link(token):
     base=APP_BASE_URL or url_for("verify_email", token=token, _external=True).rsplit("/verify/",1)[0]
