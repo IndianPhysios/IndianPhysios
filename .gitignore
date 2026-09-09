@@ -1,0 +1,6 @@
+.venv/
+__pycache__/
+*.pyc
+.env
+indian_physios.db
+static/uploads/

@@ -1,0 +1,5 @@
+{% extends "base.html" %}{% block title %}Notifications · Indian Physios{% endblock %}{% block content %}
+<h1>🔔 Notifications</h1>
+<p class="muted">Updates about Home Visits and activity relevant to you.</p>
+{% for n in notifications %}<div class="card"><h3>{{n.title}}</h3><p>{{n.body}}</p><small>{{n.created_at}}</small>{% if n.home_visit_id %}<div style="margin-top:12px"><a class="btn small" href="{{url_for('home_visits')}}">View Home Visits</a></div>{% endif %}</div>{% else %}<div class="card"><h3>No notifications yet</h3><p class="muted">When a Home Visit is posted using your same PIN code, you'll see a notification here.</p></div>{% endfor %}
+{% endblock %}

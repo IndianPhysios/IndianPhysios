@@ -1,0 +1,11 @@
+
+<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>{% block title %}Indian Physios{% endblock %}</title>
+<link rel="stylesheet" href="{{ url_for('static',filename='style.css') }}"></head>
+<body>
+<header><div class="wrap nav"><a class="brand" href="{{url_for('home')}}">Indian Physios</a>
+<nav><a href="{{url_for('directory')}}">Directory</a><a href="{{url_for('community')}}">Community</a><a href="{{url_for('jobs')}}">Jobs</a><a href="{{url_for('home_visits')}}">Home Visits</a><a href="{{url_for('events')}}">Events</a><a href="{{url_for('about')}}">About</a>
+{% if current_user %}<a href="{{url_for('profile',user_id=current_user['id'])}}">My Profile</a><a href="{{url_for('connections')}}">Connections</a><a href="{{url_for('notifications')}}">🔔 Notifications{% if unread_notifications %} ({{unread_notifications}}){% endif %}</a><a href="{{url_for('messages')}}">Messages{% if unread_messages %} ({{unread_messages}}){% endif %}</a><a href="{{url_for('logout')}}">Logout</a>{% else %}<a href="{{url_for('login')}}">Login</a><a class="btn small" href="{{url_for('register')}}">Join Free</a>{% endif %}</nav></div></header>
+<main class="wrap">{% with messages=get_flashed_messages(with_categories=true) %}{% for cat,msg in messages %}<div class="flash {{cat}}">{{msg}}</div>{% endfor %}{% endwith %}{% block content %}{% endblock %}</main>
+<footer><div class="wrap">Indian Physios · A professional networking community for physiotherapists across India</div></footer>
+</body></html>

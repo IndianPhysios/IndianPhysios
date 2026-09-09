@@ -1,0 +1,6 @@
+{% extends "base.html" %}{% block title %}Messages · Indian Physios{% endblock %}{% block content %}
+<div class="row"><div><h1>💬 Messages</h1><p class="muted">Private conversations with your Indian Physios connections.</p></div></div>
+{% if conversations %}
+{% for c in conversations %}<a class="card" style="display:block;text-decoration:none;color:inherit" href="{{url_for('message_user', user_id=c.other_id)}}"><div class="row"><div><h2 style="margin:0">{{c.name}}</h2><small>{{c.specialization or 'Physiotherapist'}}{% if c.city %} · {{c.city}}{% endif %}</small></div><small>{{c.created_at.replace('T',' ')}}</small></div><p style="margin-bottom:0">{{c.body[:120]}}{{'…' if c.body|length > 120 else ''}}</p></a>{% endfor %}
+{% else %}<div class="card"><h2>No messages yet</h2><p>Connect with another physiotherapist, then use their profile or a Home Visit post to start a private conversation.</p></div>{% endif %}
+{% endblock %}

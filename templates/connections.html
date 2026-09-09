@@ -1,0 +1,12 @@
+{% extends "base.html" %}{% block title %}Connections · Indian Physios{% endblock %}{% block content %}
+<h1>My Connections</h1>
+<div class="card"><h2>Connection Requests</h2>
+{% for u in incoming %}<div class="connection-row"><div class="avatar sm">{{u.name[:1].upper()}}</div><div class="connection-info"><h3>{{u.name}}</h3><p>{{u.specialization or "Physiotherapist"}} · {{u.city or ""}}{% if u.city and u.state %}, {% endif %}{{u.state or ""}}</p></div><form method="post" action="{{url_for('connection_action',connection_id=u.id,action='accept')}}"><input type="hidden" name="csrf_token" value="{{csrf_token}}"><button class="btn small">Accept</button></form><form method="post" action="{{url_for('connection_action',connection_id=u.id,action='decline')}}"><input type="hidden" name="csrf_token" value="{{csrf_token}}"><button class="btn ghost small">Decline</button></form></div>
+{% else %}<p class="muted">No pending requests.</p>{% endfor %}</div>
+<div class="card"><h2>People You Requested</h2>
+{% for u in outgoing %}<div class="connection-row"><div class="avatar sm">{{u.name[:1].upper()}}</div><div class="connection-info"><h3>{{u.name}}</h3><p>{{u.specialization or "Physiotherapist"}} · {{u.city or ""}}</p></div><form method="post" action="{{url_for('connection_action',connection_id=u.id,action='cancel')}}"><input type="hidden" name="csrf_token" value="{{csrf_token}}"><button class="btn ghost small">Cancel</button></form></div>
+{% else %}<p class="muted">No outgoing requests.</p>{% endfor %}</div>
+<div class="card"><h2>My Connections</h2>
+{% for u in accepted %}<div class="connection-row"><a class="connection-person" href="{{url_for('profile',user_id=u.id)}}"><div class="avatar sm">{{u.name[:1].upper()}}</div><div class="connection-info"><h3>{{u.name}}</h3><p>{{u.specialization or "Physiotherapist"}} · {{u.city or ""}}{% if u.city and u.state %}, {{u.state }}{% endif %}</p></div></a><a class="btn small" href="{{url_for('message_user',user_id=u.id)}}">💬 Message</a></div>
+{% else %}<p class="muted">You don't have any connections yet. Visit the Directory and connect with other physiotherapists.</p>{% endfor %}</div>
+{% endblock %}

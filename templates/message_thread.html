@@ -1,0 +1,7 @@
+{% extends "base.html" %}{% block title %}Message {{target.name}} · Indian Physios{% endblock %}{% block content %}
+<div class="row"><div><h1>💬 {{target.name}}</h1><p class="muted">{{target.specialization or 'Physiotherapist'}}{% if target.city %} · {{target.city}}{% endif %}</p></div><a class="btn ghost" href="{{url_for('profile', user_id=target.id)}}">View Profile</a></div>
+<div class="card" style="max-height:520px;overflow:auto">
+{% for m in thread %}<div style="margin:12px 0;text-align:{{'right' if m.sender_id == current_user.id else 'left'}}"><div style="display:inline-block;max-width:80%;padding:12px 15px;border-radius:14px;background:{{'#eaf4ff' if m.sender_id == current_user.id else '#f1f1f1'}}"><div>{{m.body}}</div><small class="muted">{{m.created_at.replace('T',' ')}}</small></div></div>{% endfor %}
+</div>
+<form class="card form" method="post"><input type="hidden" name="csrf_token" value="{{csrf_token}}"><label>Write a private message<textarea name="body" rows="4" maxlength="5000" placeholder="Type your message..." required></textarea></label><button class="btn">Send Message</button></form>
+{% endblock %}

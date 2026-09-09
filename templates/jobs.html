@@ -1,0 +1,6 @@
+{% extends "base.html" %}{% block title %}Jobs · Indian Physios{% endblock %}{% block content %}
+<div class="row"><div><h1>Physiotherapy Jobs</h1><p class="muted">Find and share professional opportunities across India.</p></div><a class="btn" href="{{url_for('home_visits')}}">View Home Visits</a></div>
+{% if current_user %}<form class="card form" method="post"><input type="hidden" name="csrf_token" value="{{csrf_token}}"><h3>Post a Job</h3><div class="two"><input name="title" placeholder="Job title" required><input name="organization" placeholder="Clinic / hospital / organization" required></div><input name="city" placeholder="City" required><textarea name="description" placeholder="Job details" required></textarea><button class="btn">Post Job</button></form>{% endif %}
+<form class="search" method="get"><input name="q" value="{{q or ''}}" placeholder="Search jobs by title, organization, city..."><button class="btn" type="submit">Search</button></form>
+{% for j in jobs %}<div class="card"><h2>{{j.title}}</h2><b>{{j.organization}}</b> · {{j.city}}<p>{{j.description}}</p><small>Posted by <a href="{{url_for('directory')}}?q={{j.name}}">{{j.name}}</a></small></div>{% else %}<div class="card">No jobs posted yet.</div>{% endfor %}
+{% endblock %}

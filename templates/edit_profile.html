@@ -1,0 +1,15 @@
+{% extends "base.html" %}{% block title %}Edit Profile · Indian Physios{% endblock %}{% block content %}
+<div class="formbox"><h1>Edit your professional profile</h1><p class="muted">Complete your profile so other physiotherapists can learn about your professional background.</p>
+<form method="post" enctype="multipart/form-data"><input type="hidden" name="csrf_token" value="{{csrf_token}}">
+<label>Full name<input name="name" value="{{user.name}}" required></label>
+<label>Profile photo<input type="file" name="photo" accept=".png,.jpg,.jpeg,.webp"><small>PNG, JPG, JPEG or WEBP · maximum 2 MB</small></label>
+<div class="two"><label>Phone<input name="phone" value="{{user.phone or ''}}"></label><label>Qualification<input name="qualification" value="{{user.qualification or ''}}" placeholder="BPT, MPT, etc."></label></div>
+<div class="two"><label>Specialization<input name="specialization" value="{{user.specialization or ''}}" placeholder="Orthopedic, Neuro, Sports..."></label><label>Experience<input name="experience" value="{{user.experience or ''}}" placeholder="e.g. 5 years"></label></div>
+<div class="two"><label>Clinic / Workplace<input name="clinic" value="{{user.clinic or ''}}"></label><label>Registration number<input name="registration_no" value="{{user.registration_no or ''}}"></label></div>
+<div class="two"><label>State<input name="state" value="{{user.state or ''}}"></label><label>City<input name="city" value="{{user.city or ''}}"></label></div>
+<label>📍 Area PIN code<input name="pincode" value="{{user.pincode or ''}}" inputmode="numeric" pattern="[0-9]{6}" maxlength="6" placeholder="6-digit PIN code"><small>Your PIN code is used to match you with nearby Home Visit opportunities.</small></label>
+<label>Education<input name="education" value="{{user.education or ''}}" placeholder="College / university / certifications"></label>
+<label>Website or professional link<input name="website" value="{{user.website or ''}}" placeholder="https://..."></label>
+<label>Professional bio<textarea name="bio" placeholder="Tell the community about your professional interests and experience.">{{user.bio or ''}}</textarea></label>
+<button class="btn">Save Profile</button> <a class="btn ghost" href="{{url_for('profile',user_id=user.id)}}">Cancel</a>
+</form></div>{% endblock %}

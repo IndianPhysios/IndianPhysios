@@ -1,0 +1,15 @@
+{% extends "base.html" %}{% block title %}Home Visits · Indian Physios{% endblock %}{% block content %}
+<div class="row"><div><h1>🏠 Home Visit Opportunities</h1><p class="muted">Physiotherapists can share home-visit opportunities and connect with another physio who is interested.</p></div><a class="btn ghost" href="{{url_for('jobs')}}">← Jobs</a></div>
+{% if current_user %}
+<form class="card form" method="post"><input type="hidden" name="csrf_token" value="{{csrf_token}}"><h3>Post a Home Visit</h3>
+<div class="flash" style="background:#fff8e6;color:#7a5200"><b>Privacy reminder:</b> Do not include the patient's name, phone number, medical record number, identifying photos, or other information that could identify the patient. Share only the information needed for another physiotherapist to understand the opportunity.</div>
+<label>📍 Location / Area<input name="location" placeholder="Area, neighborhood, or city" required></label>
+<label>📮 Area PIN code<input name="pincode" inputmode="numeric" pattern="[0-9]{6}" maxlength="6" placeholder="6-digit PIN code" required><small>We use the 6-digit PIN code to notify physiotherapists in the same nearby area.</small></label>
+<label>🩺 Condition / Diagnosis<input name="diagnosis" placeholder="e.g. Stroke rehabilitation, knee replacement, pediatric case" required></label>
+<label>🎯 Physiotherapy need<textarea name="physio_need" placeholder="What type of physiotherapy support is needed?" required></textarea></label>
+<label>📝 Additional details<textarea name="details" placeholder="Any other useful, non-identifying information for an interested physiotherapist" required></textarea></label>
+<button class="btn">Post Home Visit</button></form>
+{% else %}<div class="card"><b>Want to post a Home Visit?</b> <a href="{{url_for('login')}}">Log in</a> or <a href="{{url_for('register')}}">Join free</a>.</div>{% endif %}
+<form class="search" method="get"><input name="q" value="{{q or ''}}" placeholder="Search by location, diagnosis, or physiotherapy need..."><button class="btn" type="submit">Search</button></form>
+{% for v in visits %}<div class="card"><div class="badges"><span>Home Visit</span><span>{{v.location}}</span><span>PIN {{v.pincode}}</span></div><h2>🩺 {{v.diagnosis}}</h2><h3>🎯 Physiotherapy need</h3><p>{{v.physio_need}}</p><h3>📝 Additional details</h3><p>{{v.details}}</p><hr><div class="row"><small>Posted by <a href="{{url_for('profile', user_id=v.user_id)}}">{{v.name}}</a></small><a class="btn small" href="mailto:{{v.email}}?subject=Indian Physios - Home Visit Interest&body=Hi {{v.name}},%0D%0A%0D%0AI am interested in the Home Visit opportunity you posted on Indian Physios.%0D%0A%0D%0AThank you.">🤝 Interested / Contact</a></div></div>{% else %}<div class="card">No Home Visit opportunities posted yet.</div>{% endfor %}
+{% endblock %}
