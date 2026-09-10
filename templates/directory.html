@@ -1,1 +1,119 @@
-{% extends "base.html" %}{% block title %}Directory · Indian Physios{% endblock %}{% block content %}<h1>Physiotherapist Directory</h1><p class="muted">Find professionals across India.</p><form class="search"><input name="q" value="{{q}}" placeholder="Name, specialty, qualification or city"><input name="state" value="{{state}}" placeholder="State"><input name="pincode" value="{{pincode or ""}}" placeholder="PIN code"><input name="specialization" value="{{specialization or ""}}" placeholder="Specialization"><button class="btn">Search</button></form><div class="list">{% for u in users %}<a class="card row" href="{{url_for('profile',user_id=u.id)}}"><div class="avatar sm">{{u.name[:1].upper()}}</div><div><h3>{{u.name}}</h3><p>{{u.specialization or "Physiotherapist"}} · {{u.qualification or "Qualification not listed"}}</p><p>{{u.city or ""}}{% if u.city and u.state %}, {% endif %}{{u.state or ""}}</p></div></a>{% else %}<div class="card">No professionals found yet.</div>{% endfor %}</div>{% endblock %}
+{% extends "base.html" %}
+
+{% block title %}Directory · Indian Physios{% endblock %}
+
+{% block content %}
+
+<section class="directory-hero">
+    <div>
+        <h1>Physiotherapist Directory</h1>
+        <p class="muted">Find and connect with verified physiotherapists across India.</p>
+    </div>
+
+
+        </div>
+    </div>
+</section>
+
+<form class="directory-filters" method="get">
+
+    <div class="filter-field filter-search">
+        <label>Search</label>
+        <input name="q" value="{{q}}" placeholder="Name, specialty, qualification or city">
+    </div>
+
+    <div class="filter-field">
+        <label>State</label>
+        <input name="state" value="{{state}}" placeholder="All States">
+    </div>
+
+    <div class="filter-field">
+        <label>City</label>
+        <input name="city" value="{{city or ''}}" placeholder="All Cities">
+    </div>
+
+    <div class="filter-field">
+        <label>Specialization</label>
+        <input name="specialization" value="{{specialization or ''}}" placeholder="All Specializations">
+    </div>
+
+    <button class="btn directory-search-btn" type="submit">⌕ &nbsp; Search</button>
+
+    <div class="filter-bottom">
+        <a href="{{url_for('directory')}}" class="clear-filters">↻ &nbsp; Clear filters</a>
+        <div class="sort-placeholder">Showing {{ users|length }} result{% if users|length != 1 %}s{% endif %}</div>
+    </div>
+
+</form>
+
+<div class="directory-results">
+    <div class="results-label">Showing {{ users|length }} result{% if users|length != 1 %}s{% endif %}</div>
+
+    {% for u in users %}
+
+    <a class="directory-card" href="{{url_for('profile',user_id=u.id)}}">
+
+        <div class="directory-person">
+            <div class="avatar directory-avatar">
+                {{u.name[:1].upper()}}
+            </div>
+
+            <div class="directory-person-info">
+                <div class="directory-name-row">
+                    <h3>{{u.name}}</h3>
+                    {% if u.verified_email %}
+                    <span class="verified-badge">✓ Verified</span>
+                    {% endif %}
+                </div>
+
+                <p class="directory-title">
+                    {{u.specialization or "Physiotherapist"}} ·
+                    {{u.qualification or "Qualification not listed"}}
+                </p>
+
+                <p class="directory-location">
+                    📍 {{u.city or ""}}{% if u.city and u.state %}, {% endif %}{{u.state or ""}}
+                </p>
+            </div>
+        </div>
+
+        <div class="directory-divider"></div>
+
+        <div class="directory-detail">
+            <span class="detail-icon">🩺</span>
+            <div>
+                <small>Specialization</small>
+                <strong>{{u.specialization or "Not specified"}}</strong>
+            </div>
+        </div>
+
+        <div class="directory-detail">
+            <span class="detail-icon">🎓</span>
+            <div>
+                <small>Qualification</small>
+                <strong>{{u.qualification or "Not specified"}}</strong>
+            </div>
+        </div>
+
+        <div class="directory-detail">
+            <span class="detail-icon">📍</span>
+            <div>
+                <small>Location</small>
+                <strong>{{u.city or "Not specified"}}{% if u.city and u.state %}, {% endif %}{{u.state or ""}}</strong>
+            </div>
+        </div>
+
+        <span class="view-profile-btn">View Profile</span>
+
+    </a>
+
+    {% else %}
+
+    <div class="card">
+        No professionals found yet.
+    </div>
+
+    {% endfor %}
+</div>
+
+{% endblock %}

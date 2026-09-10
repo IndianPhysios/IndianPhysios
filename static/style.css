@@ -6,3 +6,563 @@
 .connection-row{display:flex;align-items:center;gap:14px;padding:13px 0;border-top:1px solid #e7eaf0}.connection-row:first-child{border-top:0}.connection-info{flex:1}.connection-info h3,.connection-info p{margin:2px 0}.connection-row form{margin:0}
 
 .connection-person{display:flex;align-items:center;gap:14px;flex:1;color:inherit;min-width:0}.connection-person:hover .connection-info h3{text-decoration:underline}
+
+/* ================================
+   INDIAN PHYSIOS DIRECTORY
+   Modern professional layout
+   ================================ */
+
+.directory-hero {
+    display: grid;
+    grid-template-columns: 1.5fr 0.9fr;
+    gap: 40px;
+    align-items: center;
+    margin: 42px 0 28px;
+}
+
+.directory-hero h1 {
+    font-size: 42px;
+    line-height: 1.15;
+    margin: 0 0 12px;
+    letter-spacing: -1px;
+}
+
+.directory-hero p {
+    font-size: 18px;
+    margin: 0;
+}
+
+.directory-stats {
+    background: #edf4ff;
+    border-radius: 18px;
+    padding: 22px 24px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+}
+
+.stats-icon {
+    width: 54px;
+    height: 54px;
+    border-radius: 50%;
+    background: #dceaff;
+    display: grid;
+    place-items: center;
+    font-size: 25px;
+    flex-shrink: 0;
+}
+
+.directory-stats strong {
+    color: #175cd3;
+    font-size: 16px;
+}
+
+.stats-numbers {
+    display: flex;
+    margin-top: 14px;
+}
+
+.stats-numbers span {
+    padding: 0 18px;
+    border-left: 1px solid #b9cff2;
+    display: flex;
+    flex-direction: column;
+}
+
+.stats-numbers span:first-child {
+    padding-left: 0;
+    border-left: 0;
+}
+
+.stats-numbers b {
+    color: #175cd3;
+    font-size: 23px;
+}
+
+.stats-numbers small {
+    margin-top: 3px;
+    font-size: 12px;
+    white-space: nowrap;
+}
+
+.directory-filters {
+    background: #fff;
+    border: 1px solid #e0e6ef;
+    border-radius: 17px;
+    padding: 22px;
+    display: grid;
+    grid-template-columns: 1.6fr 0.85fr 0.85fr 0.95fr 0.9fr;
+    gap: 16px;
+    box-shadow: 0 6px 20px rgba(23,32,51,.05);
+}
+
+.filter-field label {
+    font-size: 13px;
+    margin: 0 0 7px;
+    display: block;
+    font-weight: 700;
+    color: #253044;
+}
+
+.filter-field input {
+    margin: 0;
+    height: 50px;
+    border-radius: 11px;
+    padding: 0 14px;
+    border: 1px solid #d6dfeb;
+    background: #fff;
+}
+
+.filter-field input:focus {
+    outline: none;
+    border-color: #175cd3;
+    box-shadow: 0 0 0 3px #175cd31a;
+}
+
+.directory-search-btn {
+    align-self: end;
+    height: 50px;
+    border-radius: 11px;
+    font-size: 14px;
+}
+
+.filter-bottom {
+    grid-column: 1 / -1;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding-top: 3px;
+}
+
+.clear-filters {
+    color: #175cd3;
+    font-size: 14px;
+    font-weight: 700;
+}
+
+.sort-placeholder {
+    color: #697586;
+    font-size: 14px;
+}
+
+.directory-results {
+    margin-top: 34px;
+}
+
+.results-label {
+    color: #596579;
+    font-size: 16px;
+    margin-bottom: 14px;
+}
+
+.directory-card {
+    background: #fff;
+    border: 1px solid #dfe6f0;
+    border-radius: 17px;
+    min-height: 155px;
+    padding: 24px 28px;
+    display: grid;
+    grid-template-columns: minmax(360px, 1.7fr) 1px 1fr 1fr 1fr auto;
+    gap: 24px;
+    align-items: center;
+    color: #172033;
+    transition: transform .15s ease, box-shadow .15s ease, border-color .15s ease;
+}
+
+.directory-card:hover {
+    transform: translateY(-2px);
+    border-color: #c9d8ee;
+    box-shadow: 0 8px 24px rgba(23,32,51,.08);
+}
+
+.directory-person {
+    display: flex;
+    align-items: center;
+    gap: 22px;
+    min-width: 0;
+}
+
+.directory-avatar {
+    width: 112px;
+    height: 112px;
+    min-width: 112px;
+    font-size: 38px;
+    background: #e8f0ff;
+    color: #175cd3;
+}
+
+.directory-person-info {
+    min-width: 0;
+}
+
+.directory-name-row {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    flex-wrap: wrap;
+}
+
+.directory-name-row h3 {
+    margin: 0;
+    color: #1261d8;
+    font-size: 22px;
+}
+
+.verified-badge {
+    background: #dff7e8;
+    color: #18804b;
+    padding: 5px 10px;
+    border-radius: 999px;
+    font-size: 12px;
+    font-weight: 800;
+}
+
+.directory-title {
+    margin: 7px 0 11px;
+    color: #596579;
+    font-size: 15px;
+}
+
+.directory-location {
+    margin: 0;
+    color: #253044;
+    font-size: 14px;
+    font-weight: 600;
+}
+
+.directory-divider {
+    width: 1px;
+    height: 75px;
+    background: #e3e8f1;
+}
+
+.directory-detail {
+    display: flex;
+    align-items: center;
+    gap: 11px;
+    min-width: 0;
+}
+
+.detail-icon {
+    font-size: 22px;
+}
+
+.directory-detail small {
+    margin: 0 0 5px;
+    font-size: 12px;
+    color: #697586;
+}
+
+.directory-detail strong {
+    display: block;
+    font-size: 14px;
+    color: #172033;
+    white-space: normal;
+}
+
+.view-profile-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 145px;
+    height: 58px;
+    padding: 0 20px;
+    border: 2px solid #1769e0;
+    border-radius: 11px;
+    color: #1769e0;
+    font-weight: 800;
+    font-size: 14px;
+    background: #fff;
+    white-space: nowrap;
+}
+
+.directory-card:hover .view-profile-btn {
+    background: #f1f6ff;
+}
+
+@media (max-width: 1050px) {
+    .directory-hero {
+        grid-template-columns: 1fr;
+    }
+
+    .directory-filters {
+        grid-template-columns: 1fr 1fr;
+    }
+
+    .filter-search {
+        grid-column: 1 / -1;
+    }
+
+    .directory-search-btn {
+        align-self: end;
+    }
+
+    .directory-card {
+        grid-template-columns: 1fr 1fr;
+    }
+
+    .directory-person {
+        grid-column: 1 / -1;
+    }
+
+    .directory-divider {
+        display: none;
+    }
+
+    .view-profile-btn {
+        justify-self: start;
+    }
+}
+
+@media (max-width: 700px) {
+    .directory-hero {
+        margin-top: 28px;
+    }
+
+    .directory-hero h1 {
+        font-size: 32px;
+    }
+
+    .directory-stats {
+        padding: 18px;
+    }
+
+    .stats-numbers {
+        gap: 8px;
+    }
+
+    .stats-numbers span {
+        padding: 0 10px;
+    }
+
+    .directory-filters {
+        grid-template-columns: 1fr;
+        padding: 18px;
+    }
+
+    .filter-search {
+        grid-column: auto;
+    }
+
+    .filter-bottom {
+        align-items: flex-start;
+        flex-direction: column;
+        gap: 12px;
+    }
+
+    .directory-card {
+        grid-template-columns: 1fr;
+        padding: 20px;
+    }
+
+    .directory-person {
+        grid-column: auto;
+    }
+
+    .directory-avatar {
+        width: 82px;
+        height: 82px;
+        min-width: 82px;
+    }
+
+    .directory-detail {
+        padding-top: 10px;
+        border-top: 1px solid #edf0f4;
+    }
+
+    .view-profile-btn {
+        width: 100%;
+    }
+}
+
+
+/* ================================
+   INDIAN PHYSIOS TOP NAVIGATION
+   ================================ */
+
+.site-header {
+    background: #fff;
+    border-bottom: 1px solid #e7eaf0;
+    position: sticky;
+    top: 0;
+    z-index: 10;
+}
+
+.site-header .nav {
+    max-width: 1450px;
+    min-height: 82px;
+    padding: 0 28px;
+}
+
+.brand {
+    display: flex;
+    flex-direction: column;
+    line-height: .95;
+    font-size: 24px;
+    font-weight: 850;
+    letter-spacing: -1px;
+    color: #172033;
+    flex-shrink: 0;
+}
+
+.main-nav {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex: 1;
+    margin-left: 35px;
+    min-width: 0;
+}
+
+.nav-primary,
+.nav-secondary {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.nav-primary {
+    margin-right: 20px;
+}
+
+.nav-secondary {
+    padding-left: 22px;
+    border-left: 1px solid #e5e8ef;
+}
+
+.main-nav a {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 5px;
+    min-width: 72px;
+    min-height: 64px;
+    padding: 7px 9px;
+    border-radius: 12px;
+    color: #273247;
+    font-size: 13px;
+    font-weight: 600;
+    white-space: nowrap;
+    transition: background .15s ease, color .15s ease;
+}
+
+.main-nav a:hover {
+    background: #f3f6fb;
+    color: #175cd3;
+}
+
+.main-nav a.active {
+    background: #eaf2ff;
+    color: #175cd3;
+}
+
+.nav-icon {
+    font-size: 21px;
+    line-height: 1;
+    font-weight: 700;
+}
+
+.main-nav a.active .nav-icon {
+    color: #175cd3;
+}
+
+.notification-badge {
+    position: absolute;
+    top: 7px;
+    right: 12px;
+    min-width: 17px;
+    height: 17px;
+    padding: 0 4px;
+    border-radius: 999px;
+    background: #e53935;
+    color: #fff;
+    font-size: 10px;
+    font-weight: 800;
+    display: grid;
+    place-items: center;
+}
+
+.logged-out-nav {
+    justify-content: flex-end;
+    gap: 12px;
+}
+
+.logged-out-nav a {
+    min-height: auto;
+    min-width: auto;
+    flex-direction: row;
+}
+
+@media (max-width: 1200px) {
+    .site-header .nav {
+        padding: 0 18px;
+    }
+
+    .main-nav {
+        margin-left: 18px;
+    }
+
+    .main-nav a {
+        min-width: 62px;
+        padding-left: 6px;
+        padding-right: 6px;
+        font-size: 12px;
+    }
+
+    .nav-secondary {
+        padding-left: 12px;
+    }
+}
+
+@media (max-width: 900px) {
+    .site-header .nav {
+        flex-direction: column;
+        align-items: stretch;
+        padding-top: 14px;
+        padding-bottom: 14px;
+        gap: 12px;
+    }
+
+    .brand {
+        align-self: flex-start;
+    }
+
+    .main-nav {
+        margin-left: 0;
+        overflow-x: auto;
+        justify-content: flex-start;
+        padding-bottom: 4px;
+    }
+
+    .nav-primary,
+    .nav-secondary {
+        flex-shrink: 0;
+    }
+
+    .nav-secondary {
+        margin-left: 8px;
+    }
+}
+
+@media (max-width: 600px) {
+    .main-nav {
+        display: flex;
+        gap: 10px;
+    }
+
+    .nav-primary,
+    .nav-secondary {
+        gap: 2px;
+    }
+
+    .main-nav a {
+        min-width: 70px;
+    }
+
+    .nav-secondary {
+        padding-left: 10px;
+    }
+}
+
