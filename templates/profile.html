@@ -1,19 +1,262 @@
-{% extends "base.html" %}{% block title %}{{user.name}} · Indian Physios{% endblock %}{% block content %}
-<div class="profile card">
-{% if user.photo %}<img class="profile-photo" src="{{url_for('profile_media',user_id=user.id)}}" alt="Profile photo">
-{% else %}<div class="avatar">{{user.name[:1].upper()}}</div>{% endif %}
-<div class="profile-main"><div class="profile-head"><div><h1>{{user.name}}</h1><p>{% if user.specialization %}{{user.specialization}} · {% endif %}{{user.qualification or "Physiotherapist"}}</p><p>{{user.city or ""}}{% if user.city and user.state %}, {% endif %}{{user.state or ""}}</p></div>{% if current_user and current_user.id == user.id %}<a class="btn small" href="{{url_for('edit_profile')}}">Edit Profile</a>
-{% elif current_user %}<form method="post" action="{{url_for('connect',user_id=user.id)}}"><input type="hidden" name="csrf_token" value="{{csrf_token}}"><button class="btn small">🤝 Connect</button></form>{% endif %}</div>
-<div class="badges">{% if user.verified_email %}<span>✓ Email verified</span>{% endif %}{% if user.verified_physio %}<span>✓ Professional verified</span>{% endif %}</div></div></div>
-<div class="profile-grid">
-<div class="card"><h2>About</h2><p>{{user.bio or "Add a short professional introduction from Edit Profile."}}</p></div>
-<div class="card"><h2>Professional Details</h2><dl>
-<dt>Specialization</dt><dd>{{user.specialization or "Not provided"}}</dd>
-<dt>Experience</dt><dd>{{user.experience or "Not provided"}}</dd>
-<dt>Clinic / Workplace</dt><dd>{{user.clinic or "Not provided"}}</dd>
-<dt>Qualification</dt><dd>{{user.qualification or "Not provided"}}</dd>
-<dt>Education</dt><dd>{{user.education or "Not provided"}}</dd>
-<dt>Registration No.</dt><dd>{{user.registration_no or "Not provided"}}</dd>
-{% if user.website %}<dt>Website</dt><dd><a href="{{user.website}}" target="_blank" rel="noopener">{{user.website}}</a></dd>{% endif %}
-</dl></div></div>
+{% extends "base.html" %}
+
+{% block title %}{{user.name}} · Indian Physios{% endblock %}
+
+{% block content %}
+
+<div class="profile-page">
+
+    <!-- PROFILE HEADER -->
+    <section class="profile-hero">
+
+        <div class="profile-hero-main">
+
+            <div class="profile-avatar-wrap">
+                {% if user.photo %}
+                    <img class="profile-avatar-large"
+                         src="{{url_for('profile_media',user_id=user.id)}}"
+                         alt="Profile photo">
+                {% else %}
+                    <div class="profile-avatar-large avatar-fallback">
+                        {{user.name[:1].upper()}}
+                    </div>
+                {% endif %}
+            </div>
+
+            <div class="profile-identity">
+
+                <div class="profile-name-row">
+                    <h1>{{user.name}}</h1>
+
+                    {% if user.verified_email %}
+                        <span class="verified-badge">✓ Email verified</span>
+                    {% endif %}
+
+                    {% if user.verified_physio %}
+                        <span class="verified-badge professional">✓ Professional verified</span>
+                    {% endif %}
+                </div>
+
+                <p class="profile-title">
+                    {{user.specialization or "Physiotherapist"}}
+                    {% if user.qualification %}
+                        · {{user.qualification}}
+                    {% endif %}
+                </p>
+
+                {% if user.city or user.state %}
+                    <p class="profile-location">
+                        📍 {{user.city or ""}}{% if user.city and user.state %}, {% endif %}{{user.state or ""}}
+                    </p>
+                {% endif %}
+
+                {% if user.bio %}
+                    <p class="profile-tagline">{{user.bio}}</p>
+                {% endif %}
+
+            </div>
+
+        </div>
+
+        <div class="profile-hero-actions">
+
+            {% if current_user and current_user.id == user.id %}
+
+                <a class="btn profile-edit-btn"
+                   href="{{url_for('edit_profile')}}">
+                    ✎ Edit Profile
+                </a>
+
+            {% elif current_user %}
+
+                <form method="post"
+                      action="{{url_for('connect',user_id=user.id)}}">
+                    <input type="hidden"
+                           name="csrf_token"
+                           value="{{csrf_token}}">
+                    <button class="btn profile-edit-btn">
+                        🤝 Connect
+                    </button>
+                </form>
+
+            {% endif %}
+
+        </div>
+
+        <!-- REAL ACTIVITY COUNTS -->
+        <div class="profile-stats">
+
+            <div class="profile-stat">
+                <strong>{{ connection_count|default(0) }}</strong>
+                <span>Connections</span>
+            </div>
+
+            <div class="profile-stat">
+                <strong>{{ post_count|default(0) }}</strong>
+                <span>Posts</span>
+            </div>
+
+            <div class="profile-stat">
+                <strong>{{ event_count|default(0) }}</strong>
+                <span>Events</span>
+            </div>
+
+        </div>
+
+    </section>
+
+
+    <!-- PROFILE CONTENT -->
+    <div class="profile-content-grid">
+
+        <!-- LEFT COLUMN -->
+        <div class="profile-left-column">
+
+            <!-- ABOUT -->
+            <section class="profile-section-card">
+
+                <div class="section-heading">
+                    <div>
+                        <span class="section-icon">▣</span>
+                        <h2>About</h2>
+                    </div>
+
+                    {% if current_user and current_user.id == user.id %}
+                        <a class="section-edit"
+                           href="{{url_for('edit_profile')}}">
+                            ✎ Edit
+                        </a>
+                    {% endif %}
+                </div>
+
+                <div class="about-content">
+                    {% if user.bio %}
+                        <p>{{user.bio}}</p>
+                    {% else %}
+                        <p class="empty-text">
+                            Add a short professional introduction from Edit Profile.
+                        </p>
+                    {% endif %}
+                </div>
+
+            </section>
+
+
+            <!-- CONTACT -->
+            <section class="profile-section-card">
+
+                <div class="section-heading">
+                    <div>
+                        <span class="section-icon">✉</span>
+                        <h2>Contact</h2>
+                    </div>
+                </div>
+
+                <div class="contact-box">
+
+                    {% if user.verified_email %}
+                        <div class="contact-status">✓</div>
+
+                        <div>
+                            <strong>Email</strong>
+                            <span>Email verified</span>
+                        </div>
+                    {% else %}
+                        <div class="contact-status unverified">!</div>
+
+                        <div>
+                            <strong>Email</strong>
+                            <span>Email not verified</span>
+                        </div>
+                    {% endif %}
+
+                </div>
+
+            </section>
+
+        </div>
+
+
+        <!-- RIGHT COLUMN -->
+        <div class="profile-right-column">
+
+            <!-- PROFESSIONAL DETAILS -->
+            <section class="profile-section-card professional-details-card">
+
+                <div class="section-heading">
+                    <div>
+                        <span class="section-icon">▣</span>
+                        <h2>Professional Details</h2>
+                    </div>
+
+                    {% if current_user and current_user.id == user.id %}
+                        <a class="section-edit"
+                           href="{{url_for('edit_profile')}}">
+                            ✎ Edit
+                        </a>
+                    {% endif %}
+                </div>
+
+                <div class="details-list">
+
+                    <div class="detail-row">
+                        <span class="detail-icon">♧</span>
+                        <span class="detail-label">Specialization</span>
+                        <strong>{{user.specialization or "Not provided"}}</strong>
+                    </div>
+
+                    <div class="detail-row">
+                        <span class="detail-icon">▣</span>
+                        <span class="detail-label">Experience</span>
+                        <strong>{{user.experience or "Not provided"}}</strong>
+                    </div>
+
+                    <div class="detail-row">
+                        <span class="detail-icon">▤</span>
+                        <span class="detail-label">Clinic / Workplace</span>
+                        <strong>{{user.clinic or "Not provided"}}</strong>
+                    </div>
+
+                    <div class="detail-row">
+                        <span class="detail-icon">◇</span>
+                        <span class="detail-label">Qualification</span>
+                        <strong>{{user.qualification or "Not provided"}}</strong>
+                    </div>
+
+                    <div class="detail-row">
+                        <span class="detail-icon">▥</span>
+                        <span class="detail-label">Education</span>
+                        <strong>{{user.education or "Not provided"}}</strong>
+                    </div>
+
+                    <div class="detail-row">
+                        <span class="detail-icon">▤</span>
+                        <span class="detail-label">Registration No.</span>
+                        <strong>{{user.registration_no or "Not provided"}}</strong>
+                    </div>
+
+                    {% if user.website %}
+                    <div class="detail-row">
+                        <span class="detail-icon">↗</span>
+                        <span class="detail-label">Website</span>
+                        <strong>
+                            <a href="{{user.website}}"
+                               target="_blank"
+                               rel="noopener">
+                                {{user.website}}
+                            </a>
+                        </strong>
+                    </div>
+                    {% endif %}
+
+                </div>
+
+            </section>
+
+        </div>
+
+    </div>
+
+</div>
+
 {% endblock %}
