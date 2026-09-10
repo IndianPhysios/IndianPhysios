@@ -1,1 +1,99 @@
-{% extends "base.html" %}{% block title %}Admin · Indian Physios{% endblock %}{% block content %}<h1>Admin Dashboard</h1><p class="muted">Local development dashboard. Add authentication before any public launch.</p>{% for u in users %}<div class="card row"><div><h3>{{u.name}}</h3><p>{{u.email}} · {{u.qualification or ""}} · {{u.city or ""}}</p><small>Email: {% if u.verified_email %}verified{% else %}not verified{% endif %} · Professional: {% if u.verified_physio %}verified{% else %}pending{% endif %}</small></div>{% if not u.verified_physio %}<form method="post" action="{{url_for('admin_verify',user_id=u.id)}}"><input type="hidden" name="csrf_token" value="{{csrf_token}}"><button class="btn small">Verify Physio</button></form>{% endif %}</div>{% endfor %}{% endblock %}
+{% extends "base.html" %}
+{% block title %}Admin · Indian Physios{% endblock %}
+{% block content %}
+
+<div class="row">
+    <div>
+        <h1>Admin Dashboard</h1>
+        <p class="muted">Manage Indian Physios members and professional verification.</p>
+
+<form method="get" class="card" style="margin-top:20px;">
+    <div class="row">
+        <input
+            type="search"
+            name="q"
+            value="{{ search_query or '' }}"
+            placeholder="🔎 Search by name or email..."
+            style="flex:1;"
+        >
+        <button class="btn" type="submit">Search</button>
+        {% if search_query %}
+            <a class="btn ghost" href="{{ url_for('admin') }}">Clear</a>
+        {% endif %}
+    </div>
+</form>
+    </div>
+</div>
+
+<div class="card">
+    <h2>👥 Members</h2>
+    <p class="muted">{{ users|length }} account(s) currently registered.</p>
+</div>
+
+{% for u in users %}
+<div class="card">
+    <div class="row">
+        <div>
+            <h3>{{u.name}}</h3>
+            <p>{{u.email}}</p>
+            <p>{{u.qualification or "Qualification not listed"}} · {{u.specialization or "Specialization not listed"}} · {{u.city or "City not listed"}}</p>
+
+            <small>
+                Registered: {{u.created_at}}
+                · Email:
+                {% if u.verified_email %}
+                    <b>Verified</b>
+                {% else %}
+                    Not verified
+                {% endif %}
+                · Professional:
+                {% if u.verified_physio %}
+                    <b>Verified</b>
+                {% else %}
+                    Pending
+                {% endif %}
+                · Account:
+                {% if u.disabled %}
+                    <b>Disabled</b>
+                {% else %}
+                    <b>Active</b>
+                {% endif %}
+            </small>
+        </div>
+
+        <div>
+            <a class="btn small" href="{{url_for('profile',user_id=u.id)}}">👤 View Profile</a>
+
+            {% if not u.verified_physio %}
+            <form method="post" action="{{url_for('admin_verify',user_id=u.id)}}" style="margin-bottom:8px;">
+                <input type="hidden" name="csrf_token" value="{{csrf_token}}">
+                <button class="btn small" type="submit">✅ Verify Physio</button>
+            </form>
+            {% endif %}
+
+            {% if u.disabled %}
+            <form method="post" action="{{url_for('admin_restore',user_id=u.id)}}" style="margin-bottom:8px;">
+                <input type="hidden" name="csrf_token" value="{{csrf_token}}">
+                <button class="btn small" type="submit">♻️ Restore</button>
+            </form>
+            {% else %}
+            <form method="post" action="{{url_for('admin_disable',user_id=u.id)}}" style="margin-bottom:8px;">
+                <input type="hidden" name="csrf_token" value="{{csrf_token}}">
+                <button class="btn small" type="submit">🚫 Disable</button>
+            </form>
+            {% endif %}
+
+            <form method="post" action="{{url_for('admin_delete',user_id=u.id)}}" onsubmit="return confirm('Delete this account permanently? This action cannot be undone.');">
+                <input type="hidden" name="csrf_token" value="{{csrf_token}}">
+                <button class="btn small" type="submit">🗑️ Delete</button>
+            </form>
+        </div>
+    </div>
+</div>
+{% else %}
+<div class="card">
+    <h3>No members found</h3>
+</div>
+{% endfor %}
+
+{% endblock %}

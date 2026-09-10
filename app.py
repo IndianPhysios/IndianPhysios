@@ -87,7 +87,7 @@ def init_db():
     c = db()
     if c.postgres:
         c.executescript("""
-        CREATE TABLE IF NOT EXISTS users (id BIGSERIAL PRIMARY KEY, name TEXT NOT NULL, email TEXT UNIQUE NOT NULL, password_hash TEXT NOT NULL, phone TEXT, qualification TEXT, specialization TEXT, state TEXT, city TEXT, pincode TEXT, registration_no TEXT, verified_email INTEGER DEFAULT 0, verified_physio INTEGER DEFAULT 0, photo TEXT, photo_data BYTEA, photo_mime TEXT, bio TEXT, clinic TEXT, experience TEXT, education TEXT, website TEXT, created_at TEXT NOT NULL);
+        CREATE TABLE IF NOT EXISTS users (id BIGSERIAL PRIMARY KEY, name TEXT NOT NULL, email TEXT UNIQUE NOT NULL, password_hash TEXT NOT NULL, phone TEXT, qualification TEXT, specialization TEXT, state TEXT, city TEXT, pincode TEXT, registration_no TEXT, verified_email INTEGER DEFAULT 0, verified_physio INTEGER DEFAULT 0, disabled INTEGER DEFAULT 0, photo TEXT, photo_data BYTEA, photo_mime TEXT, bio TEXT, clinic TEXT, experience TEXT, education TEXT, website TEXT, created_at TEXT NOT NULL);
         CREATE TABLE IF NOT EXISTS verification_tokens (id BIGSERIAL PRIMARY KEY, user_id BIGINT NOT NULL, token TEXT UNIQUE NOT NULL, expires_at TEXT NOT NULL);
         CREATE TABLE IF NOT EXISTS connections (id BIGSERIAL PRIMARY KEY, requester_id BIGINT NOT NULL, receiver_id BIGINT NOT NULL, status TEXT NOT NULL DEFAULT 'pending', created_at TEXT NOT NULL, UNIQUE(requester_id, receiver_id));
         CREATE TABLE IF NOT EXISTS posts (id BIGSERIAL PRIMARY KEY, user_id BIGINT NOT NULL, title TEXT NOT NULL, body TEXT NOT NULL, created_at TEXT NOT NULL);
@@ -96,10 +96,11 @@ def init_db():
         CREATE TABLE IF NOT EXISTS notifications (id BIGSERIAL PRIMARY KEY, user_id BIGINT NOT NULL, home_visit_id BIGINT, title TEXT NOT NULL, body TEXT NOT NULL, created_at TEXT NOT NULL, read_at TEXT);
         CREATE TABLE IF NOT EXISTS events (id BIGSERIAL PRIMARY KEY, user_id BIGINT NOT NULL, title TEXT NOT NULL, location TEXT NOT NULL, event_date TEXT NOT NULL, description TEXT NOT NULL, created_at TEXT NOT NULL);
         CREATE TABLE IF NOT EXISTS messages (id BIGSERIAL PRIMARY KEY, sender_id BIGINT NOT NULL, receiver_id BIGINT NOT NULL, body TEXT NOT NULL, created_at TEXT NOT NULL, read_at TEXT);
+        CREATE TABLE IF NOT EXISTS admin_audit_log (id BIGSERIAL PRIMARY KEY, admin_user_id BIGINT NOT NULL, action TEXT NOT NULL, target_user_id BIGINT, details TEXT, created_at TEXT NOT NULL);
         """)
     else:
         c.executescript("""
-        CREATE TABLE IF NOT EXISTS users (id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT NOT NULL, email TEXT UNIQUE NOT NULL, password_hash TEXT NOT NULL, phone TEXT, qualification TEXT, specialization TEXT, state TEXT, city TEXT, pincode TEXT, registration_no TEXT, verified_email INTEGER DEFAULT 0, verified_physio INTEGER DEFAULT 0, photo TEXT, photo_data BLOB, photo_mime TEXT, bio TEXT, clinic TEXT, experience TEXT, education TEXT, website TEXT, created_at TEXT NOT NULL);
+        CREATE TABLE IF NOT EXISTS users (id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT NOT NULL, email TEXT UNIQUE NOT NULL, password_hash TEXT NOT NULL, phone TEXT, qualification TEXT, specialization TEXT, state TEXT, city TEXT, pincode TEXT, registration_no TEXT, verified_email INTEGER DEFAULT 0, verified_physio INTEGER DEFAULT 0, disabled INTEGER DEFAULT 0, photo TEXT, photo_data BLOB, photo_mime TEXT, bio TEXT, clinic TEXT, experience TEXT, education TEXT, website TEXT, created_at TEXT NOT NULL);
         CREATE TABLE IF NOT EXISTS verification_tokens (id INTEGER PRIMARY KEY AUTOINCREMENT, user_id INTEGER NOT NULL, token TEXT UNIQUE NOT NULL, expires_at TEXT NOT NULL);
         CREATE TABLE IF NOT EXISTS connections (id INTEGER PRIMARY KEY AUTOINCREMENT, requester_id INTEGER NOT NULL, receiver_id INTEGER NOT NULL, status TEXT NOT NULL DEFAULT 'pending', created_at TEXT NOT NULL, UNIQUE(requester_id, receiver_id));
         CREATE TABLE IF NOT EXISTS posts (id INTEGER PRIMARY KEY AUTOINCREMENT, user_id INTEGER NOT NULL, title TEXT NOT NULL, body TEXT NOT NULL, created_at TEXT NOT NULL);
@@ -108,9 +109,10 @@ def init_db():
         CREATE TABLE IF NOT EXISTS notifications (id INTEGER PRIMARY KEY AUTOINCREMENT, user_id INTEGER NOT NULL, home_visit_id INTEGER, title TEXT NOT NULL, body TEXT NOT NULL, created_at TEXT NOT NULL, read_at TEXT);
         CREATE TABLE IF NOT EXISTS events (id INTEGER PRIMARY KEY AUTOINCREMENT, user_id INTEGER NOT NULL, title TEXT NOT NULL, location TEXT NOT NULL, event_date TEXT NOT NULL, description TEXT NOT NULL, created_at TEXT NOT NULL);
         CREATE TABLE IF NOT EXISTS messages (id INTEGER PRIMARY KEY AUTOINCREMENT, sender_id INTEGER NOT NULL, receiver_id INTEGER NOT NULL, body TEXT NOT NULL, created_at TEXT NOT NULL, read_at TEXT);
+        CREATE TABLE IF NOT EXISTS admin_audit_log (id INTEGER PRIMARY KEY AUTOINCREMENT, admin_user_id INTEGER NOT NULL, action TEXT NOT NULL, target_user_id INTEGER, details TEXT, created_at TEXT NOT NULL);
         """)
         cols = {r["name"] for r in c.execute("PRAGMA table_info(users)").fetchall()}
-        for col, definition in [("bio","TEXT"),("clinic","TEXT"),("experience","TEXT"),("education","TEXT"),("website","TEXT"),("photo","TEXT"),("photo_data","BLOB"),("photo_mime","TEXT"),("pincode","TEXT")]:
+        for col, definition in [("bio","TEXT"),("clinic","TEXT"),("experience","TEXT"),("education","TEXT"),("website","TEXT"),("photo","TEXT"),("photo_data","BLOB"),("photo_mime","TEXT"),("pincode","TEXT"),("disabled","INTEGER DEFAULT 0")]:
             if col not in cols: c.execute(f"ALTER TABLE users ADD COLUMN {col} {definition}")
         hv_cols = {r["name"] for r in c.execute("PRAGMA table_info(home_visits)").fetchall()}
         if "pincode" not in hv_cols: c.execute("ALTER TABLE home_visits ADD COLUMN pincode TEXT NOT NULL DEFAULT ''")
@@ -187,6 +189,37 @@ def current_user():
     uid=session.get("user_id")
     if not uid: return None
     c=db(); u=c.execute("SELECT * FROM users WHERE id=?",(uid,)).fetchone(); c.close(); return u
+
+def is_admin():
+    u = current_user()
+    admin_email = os.environ.get("ADMIN_EMAIL", "").strip().lower()
+    return bool(u and admin_email and u["email"].lower() == admin_email)
+
+def require_admin():
+    if not is_admin():
+        abort(403)
+
+def require_login():
+    u = current_user()
+    if not u:
+        return redirect(url_for("login"))
+    if u["disabled"]:
+        session.clear()
+        flash("This account has been disabled. Please contact Indian Physios support.","error")
+        return redirect(url_for("login"))
+    return None
+
+def audit_admin(action, target_user_id=None, details=""):
+    admin_user = current_user()
+    if not admin_user:
+        return
+    c = db()
+    c.execute(
+        "INSERT INTO admin_audit_log(admin_user_id,action,target_user_id,details,created_at) VALUES(?,?,?,?,?)",
+        (admin_user["id"], action, target_user_id, details, now())
+    )
+    c.commit()
+    c.close()
 
 def send_email(to, subject, body):
     # Prefer Brevo's HTTPS API in production. This works on Render Free,
@@ -279,6 +312,7 @@ def login():
         email=request.form.get("email","").strip().lower(); password=request.form.get("password",""); c=db(); u=c.execute("SELECT * FROM users WHERE email=?",(email,)).fetchone(); c.close()
         if not u or not check_password_hash(u["password_hash"],password): flash("Invalid email or password.","error"); return redirect(url_for("login"))
         if not u["verified_email"]: flash("Please verify your email first.","error"); return redirect(url_for("login"))
+        if u["disabled"]: flash("This account has been disabled. Please contact Indian Physios support.","error"); return redirect(url_for("login"))
         session.clear(); session["user_id"]=u["id"]; return redirect(url_for("profile",user_id=u["id"]))
     return render_template("login.html")
 
@@ -287,8 +321,10 @@ def logout(): session.clear(); return redirect(url_for("home"))
 
 @app.route("/profile/edit",methods=["GET","POST"])
 def edit_profile():
+    login_redirect = require_login()
+    if login_redirect:
+        return login_redirect
     u=current_user()
-    if not u: return redirect(url_for("login"))
     if request.method=="POST":
         name=request.form.get("name","").strip(); pincode=request.form.get("pincode","").strip()
         if not name or not valid_pincode(pincode): flash("Name and a valid 6-digit PIN code are required.","error"); return redirect(url_for("edit_profile"))
@@ -304,29 +340,48 @@ def edit_profile():
 
 @app.route("/media/profile/<int:user_id>")
 def profile_media(user_id):
+    login_redirect = require_login()
+    if login_redirect:
+        return login_redirect
     c=db(); u=c.execute("SELECT photo_data,photo_mime FROM users WHERE id=?",(user_id,)).fetchone(); c.close()
     if not u or not u["photo_data"]: abort(404)
     return send_file(BytesIO(bytes(u["photo_data"])),mimetype=u["photo_mime"] or "image/jpeg",max_age=86400)
 
+@app.route("/dashboard")
+def dashboard():
+    login_redirect = require_login()
+    if login_redirect:
+        return login_redirect
+    u = current_user()
+    return render_template("profile.html", user=u)
+
 @app.route("/profile/<int:user_id>")
 def profile(user_id):
+    login_redirect = require_login()
+    if login_redirect:
+        return login_redirect
     c=db(); u=c.execute("SELECT * FROM users WHERE id=?",(user_id,)).fetchone(); c.close()
     if not u: abort(404)
     return render_template("profile.html",user=u)
 
 @app.route("/directory")
 def directory():
+    login_redirect = require_login()
+    if login_redirect:
+        return login_redirect
     q=request.args.get("q","").strip(); state=request.args.get("state","").strip(); pincode=request.args.get("pincode","").strip(); specialization=request.args.get("specialization","").strip(); c=db()
     if q or state or pincode or specialization:
         like=f"%{q}%"; sl=f"%{specialization}%"; pl=f"%{pincode}%"; users=c.execute("SELECT * FROM users WHERE (name LIKE ? OR specialization LIKE ? OR qualification LIKE ? OR city LIKE ?) AND (?='' OR state=?) AND (?='' OR pincode LIKE ?) AND (?='' OR specialization LIKE ?) ORDER BY name",(like,like,like,like,state,state,pl,pl,sl,sl)).fetchall()
-    else: users=c.execute("SELECT * FROM users ORDER BY name").fetchall()
+    else: users=c.execute("SELECT * FROM users WHERE verified_email=1 AND disabled=0 ORDER BY name").fetchall()
     c.close(); return render_template("directory.html",users=users,q=q,state=state,pincode=pincode,specialization=specialization)
 
 # Keep the existing connection, messaging, community, jobs, home visits, notifications, events and admin routes.
 @app.route("/connect/<int:user_id>",methods=["POST"])
 def connect(user_id):
+    login_redirect = require_login()
+    if login_redirect:
+        return login_redirect
     u=current_user()
-    if not u: return redirect(url_for("login"))
     if user_id==u["id"]: flash("You cannot connect with yourself.","error"); return redirect(url_for("profile",user_id=user_id))
     c=db(); target=c.execute("SELECT id FROM users WHERE id=?",(user_id,)).fetchone()
     if not target: c.close(); abort(404)
@@ -337,14 +392,18 @@ def connect(user_id):
 
 @app.route("/connections")
 def connections():
+    login_redirect = require_login()
+    if login_redirect:
+        return login_redirect
     u=current_user()
-    if not u:return redirect(url_for("login"))
     c=db(); incoming=c.execute("SELECT connections.id,users.id AS user_id,users.name,users.specialization,users.city,users.state FROM connections JOIN users ON users.id=connections.requester_id WHERE connections.receiver_id=? AND connections.status='pending' ORDER BY connections.id DESC",(u["id"],)).fetchall(); outgoing=c.execute("SELECT connections.id,users.id AS user_id,users.name,users.specialization,users.city,users.state FROM connections JOIN users ON users.id=connections.receiver_id WHERE connections.requester_id=? AND connections.status='pending' ORDER BY connections.id DESC",(u["id"],)).fetchall(); accepted=c.execute("SELECT users.id,users.name,users.specialization,users.city,users.state FROM connections JOIN users ON users.id=CASE WHEN connections.requester_id=? THEN connections.receiver_id ELSE connections.requester_id END WHERE (connections.requester_id=? OR connections.receiver_id=?) AND connections.status='accepted' ORDER BY users.name",(u["id"],u["id"],u["id"])).fetchall(); c.close(); return render_template("connections.html",incoming=incoming,outgoing=outgoing,accepted=accepted)
 
 @app.route("/connection/<int:connection_id>/<action>",methods=["POST"])
 def connection_action(connection_id,action):
+    login_redirect = require_login()
+    if login_redirect:
+        return login_redirect
     u=current_user()
-    if not u:return redirect(url_for("login"))
     if action not in ("accept","decline","cancel"):abort(400)
     c=db(); conn=c.execute("SELECT * FROM connections WHERE id=?",(connection_id,)).fetchone()
     if not conn:c.close();abort(404)
@@ -359,14 +418,18 @@ def are_connected(a,b):
 
 @app.route("/messages")
 def messages():
+    login_redirect = require_login()
+    if login_redirect:
+        return login_redirect
     u=current_user()
-    if not u:return redirect(url_for("login"))
     c=db(); rows=c.execute("SELECT x.*,users.name,users.photo,users.specialization,users.city FROM (SELECT m.*,CASE WHEN m.sender_id=? THEN m.receiver_id ELSE m.sender_id END AS other_id FROM messages m WHERE m.sender_id=? OR m.receiver_id=?) x JOIN users ON users.id=x.other_id WHERE x.id IN (SELECT MAX(m2.id) FROM messages m2 WHERE m2.sender_id=? OR m2.receiver_id=? GROUP BY CASE WHEN m2.sender_id=? THEN m2.receiver_id ELSE m2.sender_id END) ORDER BY x.id DESC",(u["id"],u["id"],u["id"],u["id"],u["id"],u["id"])).fetchall(); c.close(); return render_template("messages.html",conversations=rows)
 
 @app.route("/messages/<int:user_id>",methods=["GET","POST"])
 def message_user(user_id):
+    login_redirect = require_login()
+    if login_redirect:
+        return login_redirect
     u=current_user()
-    if not u:return redirect(url_for("login"))
     if user_id==u["id"] or not are_connected(u["id"],user_id): flash("You can message a physiotherapist after you are connected.","error"); return redirect(url_for("profile",user_id=user_id))
     c=db(); target=c.execute("SELECT * FROM users WHERE id=?",(user_id,)).fetchone(); c.close()
     if not target:abort(404)
@@ -380,6 +443,9 @@ def message_user(user_id):
 
 @app.route("/community",methods=["GET","POST"])
 def community():
+    login_redirect = require_login()
+    if login_redirect:
+        return login_redirect
     if request.method=="POST":
         u=current_user()
         if not u:return redirect(url_for("login"))
@@ -392,6 +458,9 @@ def community():
 
 @app.route("/jobs",methods=["GET","POST"])
 def jobs():
+    login_redirect = require_login()
+    if login_redirect:
+        return login_redirect
     if request.method=="POST":
         u=current_user()
         if not u:return redirect(url_for("login"))
@@ -403,6 +472,9 @@ def jobs():
 
 @app.route("/home-visits",methods=["GET","POST"])
 def home_visits():
+    login_redirect = require_login()
+    if login_redirect:
+        return login_redirect
     u=current_user()
     if request.method=="POST":
         if not u:return redirect(url_for("login"))
@@ -416,12 +488,17 @@ def home_visits():
 
 @app.route("/notifications")
 def notifications():
+    login_redirect = require_login()
+    if login_redirect:
+        return login_redirect
     u=current_user()
-    if not u:return redirect(url_for("login"))
     c=db();rows=c.execute("SELECT * FROM notifications WHERE user_id=? ORDER BY id DESC",(u["id"],)).fetchall();c.execute("UPDATE notifications SET read_at=? WHERE user_id=? AND read_at IS NULL",(now(),u["id"]));c.commit();c.close();return render_template("notifications.html",notifications=rows)
 
 @app.route("/events",methods=["GET","POST"])
 def events():
+    login_redirect = require_login()
+    if login_redirect:
+        return login_redirect
     if request.method=="POST":
         u=current_user()
         if not u:return redirect(url_for("login"))
@@ -432,14 +509,105 @@ def events():
 
 @app.route("/admin")
 def admin():
-    u=current_user()
-    if not u or u["email"].lower()!=os.environ.get("ADMIN_EMAIL","admin@indian_physios.local").lower(): abort(403)
-    c=db();users=c.execute("SELECT * FROM users ORDER BY id DESC").fetchall();c.close();return render_template("admin.html",users=users)
+    require_admin()
+    q=request.args.get("q","").strip()
+    c=db()
+    if q:
+        like=f"%{q}%"
+        users=c.execute(
+            "SELECT * FROM users WHERE name LIKE ? OR email LIKE ? ORDER BY id DESC",
+            (like,like)
+        ).fetchall()
+    else:
+        users=c.execute("SELECT * FROM users ORDER BY id DESC").fetchall()
+    c.close()
+    return render_template("admin.html",users=users,search_query=q)
+
+@app.route("/admin/disable/<int:user_id>",methods=["POST"])
+def admin_disable(user_id):
+    require_admin()
+    admin_user = current_user()
+
+    if user_id == admin_user["id"]:
+        flash("You cannot disable your own admin account.","error")
+        return redirect(url_for("admin"))
+
+    c = db()
+    target = c.execute("SELECT id,name,email FROM users WHERE id=?",(user_id,)).fetchone()
+
+    if not target:
+        c.close()
+        abort(404)
+
+    c.execute("UPDATE users SET disabled=1 WHERE id=?",(user_id,))
+    c.commit()
+    c.close()
+
+    audit_admin("disabled_account", user_id, f"Disabled account: {target['email']}")
+    flash(f"Account for {target['name']} has been disabled.","success")
+    return redirect(url_for("admin"))
+
+@app.route("/admin/restore/<int:user_id>",methods=["POST"])
+def admin_restore(user_id):
+    require_admin()
+
+    c = db()
+    target = c.execute("SELECT id,name,email FROM users WHERE id=?",(user_id,)).fetchone()
+
+    if not target:
+        c.close()
+        abort(404)
+
+    c.execute("UPDATE users SET disabled=0 WHERE id=?",(user_id,))
+    c.commit()
+    c.close()
+
+    audit_admin("restored_account", user_id, f"Restored account: {target['email']}")
+    flash(f"Account for {target['name']} has been restored.","success")
+    return redirect(url_for("admin"))
+
+@app.route("/admin/delete/<int:user_id>",methods=["POST"])
+def admin_delete(user_id):
+    require_admin()
+    admin_user = current_user()
+
+    if user_id == admin_user["id"]:
+        flash("You cannot delete your own admin account.","error")
+        return redirect(url_for("admin"))
+
+    c = db()
+    target = c.execute("SELECT id,name,email FROM users WHERE id=?",(user_id,)).fetchone()
+
+    if not target:
+        c.close()
+        abort(404)
+
+    audit_details = f"Deleted account: {target['email']}"
+
+    c.execute(
+        "INSERT INTO admin_audit_log(admin_user_id,action,target_user_id,details,created_at) VALUES(?,?,?,?,?)",
+        (admin_user["id"], "deleted_account", user_id, audit_details, now())
+    )
+
+    c.execute("DELETE FROM verification_tokens WHERE user_id=?",(user_id,))
+    c.execute("DELETE FROM notifications WHERE user_id=?",(user_id,))
+    c.execute("DELETE FROM messages WHERE sender_id=? OR receiver_id=?",(user_id,user_id))
+    c.execute("DELETE FROM connections WHERE requester_id=? OR receiver_id=?",(user_id,user_id))
+    c.execute("DELETE FROM posts WHERE user_id=?",(user_id,))
+    c.execute("DELETE FROM jobs WHERE user_id=?",(user_id,))
+    c.execute("DELETE FROM home_visits WHERE user_id=?",(user_id,))
+    c.execute("DELETE FROM events WHERE user_id=?",(user_id,))
+    c.execute("DELETE FROM users WHERE id=?",(user_id,))
+
+    c.commit()
+    c.close()
+
+    flash(f"Account for {target['name']} was permanently deleted.","success")
+    return redirect(url_for("admin"))
 
 @app.route("/admin/verify/<int:user_id>",methods=["POST"])
 def admin_verify(user_id):
-    u=current_user()
-    if not u or u["email"].lower()!=os.environ.get("ADMIN_EMAIL","admin@indian_physios.local").lower():abort(403)
+    require_admin()
     c=db();c.execute("UPDATE users SET verified_physio=1 WHERE id=?",(user_id,));c.commit();c.close();return redirect(url_for("admin"))
 
 @app.route("/about")
