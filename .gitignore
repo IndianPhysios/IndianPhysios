@@ -4,3 +4,5 @@ __pycache__/
 .env
 indian_physios.db
 static/uploads/
+indianphysios_v8_backup.sql
+supabase/.temp/
