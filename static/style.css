@@ -656,6 +656,8 @@
     color: #175cd3;
 }
 
+.profile-hero { position: relative; }
+
 .profile-hero-actions {
     position: absolute;
     margin-top: -52px;
@@ -875,7 +877,9 @@
         font-size: 29px;
     }
 
-    .profile-hero-actions {
+    .profile-hero { position: relative; }
+
+.profile-hero-actions {
         position: static;
         margin: 22px 0 0;
     }
@@ -1100,5 +1104,21 @@
     .site-footer-content {
         grid-template-columns: 1fr;
         gap: 30px;
+    }
+}
+
+/* Fix profile Connect/Edit button positioning */
+.profile-hero-actions {
+    position: absolute;
+    top: 28px;
+    right: 28px;
+    margin: 0;
+    z-index: 2;
+}
+
+@media (max-width: 750px) {
+    .profile-hero-actions {
+        position: static;
+        margin: 22px 0 0;
     }
 }
