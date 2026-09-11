@@ -28,7 +28,7 @@ app.config.update(
     SESSION_COOKIE_HTTPONLY=True,
     SESSION_COOKIE_SAMESITE="Lax",
     SESSION_COOKIE_SECURE=IS_PRODUCTION,
-    MAX_CONTENT_LENGTH=3 * 1024 * 1024,
+    MAX_CONTENT_LENGTH=5 * 1024 * 1024,
 )
 
 # Optional PostgreSQL support for production hosting. Local development remains SQLite.
