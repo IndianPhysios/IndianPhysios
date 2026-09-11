@@ -934,3 +934,171 @@
     }
 }
 
+
+/* Small Indian flag beside Indian Physios brand */
+.brand-flag {
+    font-size: 16px;
+    margin-right: 5px;
+    line-height: 1;
+}
+
+/* V10 footer redesign */
+.site-footer {
+    background: #f7f9fc;
+    color: #18233a;
+    border-top: 1px solid #e2e7ef;
+    margin-top: 60px;
+    padding: 42px 0 0;
+}
+
+.site-footer-content {
+    display: grid;
+    grid-template-columns: 1.4fr 0.8fr 1fr;
+    gap: 50px;
+    padding: 0 20px 36px;
+}
+
+.site-footer h3 {
+    margin: 0 0 12px;
+    font-size: 24px;
+    font-weight: 800;
+}
+
+.site-footer h4 {
+    margin: 0 0 16px;
+    font-size: 17px;
+    font-weight: 800;
+}
+
+.site-footer p {
+    margin: 8px 0;
+    line-height: 1.6;
+}
+
+.footer-brand p {
+    max-width: 420px;
+}
+
+.footer-founder {
+    font-weight: 700;
+}
+
+.footer-links {
+    display: flex;
+    flex-direction: column;
+    gap: 9px;
+}
+
+.footer-links a {
+    color: #536176;
+    text-decoration: none;
+}
+
+.footer-links a:hover {
+    color: #1769e0;
+}
+
+.footer-contact p {
+    margin: 12px 0;
+}
+
+.footer-contact a {
+    color: #1769e0;
+    font-weight: 600;
+}
+
+.site-footer-content a {
+    text-decoration: none;
+}
+
+.brand {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.brand-flag {
+    font-size: 14px;
+    margin-right: 2px;
+    line-height: 1;
+    align-self: flex-start;
+}
+
+@media (max-width: 700px) {
+    .site-footer-content {
+        grid-template-columns: 1fr;
+        gap: 28px;
+    }
+}
+
+/* Keep Indian Physios stacked, with flag beside the logo */
+.brand {
+    position: relative;
+    padding-left: 22px;
+}
+
+.brand-flag {
+    position: absolute;
+    left: 0;
+    top: 2px;
+    font-size: 14px;
+    margin: 0;
+    line-height: 1;
+}
+
+/* V10 Footer - Dark Navy Design */
+.site-footer {
+    background: #172033;
+    color: #d7deea;
+    border-top: 1px solid #26334a;
+    margin-top: 60px;
+    padding: 48px 0 0;
+}
+
+.site-footer h3,
+.site-footer h4 {
+    color: #ffffff;
+}
+
+.site-footer p {
+    color: #d7deea;
+}
+
+.site-footer .footer-founder {
+    color: #ffffff;
+}
+
+.site-footer .footer-links a {
+    color: #c8d1df;
+}
+
+.site-footer .footer-links a:hover {
+    color: #ffffff;
+}
+
+.site-footer .footer-contact a {
+    color: #4d8df7;
+}
+
+.site-footer-content {
+    grid-template-columns: 1.4fr 0.8fr 1fr;
+    gap: 70px;
+    padding-bottom: 40px;
+}
+
+.footer-bottom {
+    border-top: 1px solid #344157;
+    padding: 22px 0;
+    color: #aeb9ca;
+}
+
+.footer-bottom .wrap {
+    color: #aeb9ca;
+}
+
+@media (max-width: 700px) {
+    .site-footer-content {
+        grid-template-columns: 1fr;
+        gap: 30px;
+    }
+}
