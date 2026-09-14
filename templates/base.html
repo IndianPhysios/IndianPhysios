@@ -23,7 +23,7 @@
             type="button"
             aria-label="Open navigation"
             aria-expanded="false"
-            onclick="toggleMobileMenu()">
+            onclick="toggleMobileMenu(this)">
         <span></span>
         <span></span>
         <span></span>
@@ -120,7 +120,7 @@
             type="button"
             aria-label="Open navigation"
             aria-expanded="false"
-            onclick="toggleMobileMenu()">
+            onclick="toggleMobileMenu(this)">
         <span></span>
         <span></span>
         <span></span>
@@ -152,14 +152,16 @@
 </header>
 
 <script>
-function toggleMobileMenu() {
-    const nav = document.getElementById("main-navigation");
-    const button = document.querySelector(".mobile-menu-toggle");
+function toggleMobileMenu(button) {
+    if (!button) return;
 
-    if (!nav || !button) return;
+    const nav = button.nextElementSibling;
+    if (!nav) return;
 
     const open = nav.classList.toggle("mobile-open");
+
     button.setAttribute("aria-expanded", open ? "true" : "false");
+    button.setAttribute("aria-label", open ? "Close navigation" : "Open navigation");
 }
 </script>
 
