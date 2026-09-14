@@ -2262,3 +2262,15 @@
     }
 }
 
+
+
+/* V10 MOBILE MENU FINAL STATE FIX */
+@media (max-width:900px){
+    .v10-main-nav{
+        display:none !important;
+    }
+
+    .v10-main-nav.mobile-open{
+        display:flex !important;
+    }
+}
