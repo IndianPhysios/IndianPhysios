@@ -164,7 +164,6 @@ def security_checks():
     if request.method == "POST":
         token = request.form.get("csrf_token") or request.headers.get("X-CSRF-Token")
         expected = session.get("csrf", "")
-        print("CSRF DEBUG:", bool(token), len(token or ""), len(expected), bool(token and expected and secrets.compare_digest(token, expected)))
         if not token or not secrets.compare_digest(token, expected):
             abort(400, "Invalid security token. Please refresh the page and try again.")
         if request.content_length and request.content_length > 3 * 1024 * 1024:
@@ -292,7 +291,7 @@ def register():
         if not name or not re.fullmatch(r"[^@\s]+@[^@\s]+\.[^@\s]+",email) or len(password)<10 or not valid_pincode(pincode): flash("Please provide a valid email, a password of at least 10 characters, and a valid 6-digit PIN code.","error"); return redirect(url_for("register"))
         c=db()
         try:
-            cur=c.execute("INSERT INTO users (name,email,password_hash,phone,qualification,specialization,state,city,pincode,registration_no,created_at) VALUES (?,?,?,?,?,?,?,?,?,?,?)",(name,email,generate_password_hash(password,method="pbkdf2:sha256:600000"),request.form.get("phone",""),request.form.get("qualification",""),request.form.get("specialization",""),request.form.get("state",""),request.form.get("city",""),pincode,request.form.get("registration_no",""),now()))
+            cur=c.execute("INSERT INTO users (name,email,password_hash,phone,qualification,specialization,state,city,pincode,created_at) VALUES (?,?,?,?,?,?,?,?,?,?)",(name,email,generate_password_hash(password,method="pbkdf2:sha256:600000"),request.form.get("phone",""),request.form.get("qualification",""),request.form.get("specialization",""),request.form.get("state",""),request.form.get("city",""),pincode,now()))
             uid=cur.lastrowid; token=make_token(); expires=(datetime.utcnow()+timedelta(hours=24)).isoformat(); c.execute("INSERT INTO verification_tokens(user_id,token,expires_at) VALUES(?,?,?)",(uid,token,expires)); c.commit()
         except (sqlite3.IntegrityError, UniqueViolation):
             c.rollback(); c.close(); flash("An account with this email already exists.","error"); return redirect(url_for("register"))
@@ -342,7 +341,7 @@ def edit_profile():
             data=uploaded.read()
             if len(data)>MAX_UPLOAD_BYTES: flash("Profile photo must be 2 MB or smaller.","error"); return redirect(url_for("edit_profile"))
             ext=uploaded.filename.rsplit(".",1)[1].lower(); photo=f"user_{u['id']}_{secrets.token_hex(8)}.{ext}"; photo_data=data; photo_mime={"jpg":"image/jpeg","jpeg":"image/jpeg","png":"image/png","webp":"image/webp"}[ext]
-        c=db(); c.execute("UPDATE users SET name=?,phone=?,qualification=?,specialization=?,state=?,city=?,pincode=?,registration_no=?,bio=?,clinic=?,experience=?,education=?,website=?,photo=?,photo_data=?,photo_mime=? WHERE id=?",(name,request.form.get("phone","").strip(),request.form.get("qualification","").strip(),request.form.get("specialization","").strip(),request.form.get("state","").strip(),request.form.get("city","").strip(),pincode,request.form.get("registration_no","").strip(),request.form.get("bio","").strip(),request.form.get("clinic","").strip(),request.form.get("experience","").strip(),request.form.get("education","").strip(),request.form.get("website","").strip(),photo,photo_data,photo_mime,u["id"])); c.commit(); c.close(); flash("Profile updated successfully.","success"); return redirect(url_for("profile",user_id=u["id"]))
+        c=db(); c.execute("UPDATE users SET name=?,phone=?,qualification=?,specialization=?,state=?,city=?,pincode=?,bio=?,clinic=?,experience=?,education=?,website=?,photo=?,photo_data=?,photo_mime=? WHERE id=?",(name,request.form.get("phone","").strip(),request.form.get("qualification","").strip(),request.form.get("specialization","").strip(),request.form.get("state","").strip(),request.form.get("city","").strip(),pincode,request.form.get("bio","").strip(),request.form.get("clinic","").strip(),request.form.get("experience","").strip(),request.form.get("education","").strip(),request.form.get("website","").strip(),photo,photo_data,photo_mime,u["id"])); c.commit(); c.close(); flash("Profile updated successfully.","success"); return redirect(url_for("profile",user_id=u["id"]))
     return render_template("edit_profile.html",user=u)
 
 @app.route("/media/profile/<int:user_id>")
