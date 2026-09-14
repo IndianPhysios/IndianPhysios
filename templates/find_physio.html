@@ -1,0 +1,199 @@
+{% extends "base.html" %}
+
+{% block title %}Find a Physiotherapist · Indian Physios{% endblock %}
+
+{% block content %}
+
+<section class="hero">
+    <div>
+        <span class="pill">🩺 Find a Physiotherapist</span>
+
+        <h1>Find the right physiotherapist near you.</h1>
+
+        <p>
+            Search for physiotherapists by name, location,
+            specialization, education, or experience.
+        </p>
+    </div>
+</section>
+
+<section class="card search-box">
+    <h2>Find a Physiotherapist</h2>
+
+    <p class="muted">
+        You can search using any one field or combine multiple fields.
+    </p>
+
+    <form method="get">
+
+        <div class="grid3">
+
+            <label>
+                Name
+                <input
+                    type="text"
+                    name="name"
+                    value="{{ request.args.get('name', '') }}"
+                    placeholder="e.g. Priya Patel"
+                >
+            </label>
+
+            <label>
+                State
+                <input
+                    type="text"
+                    name="state"
+                    value="{{ request.args.get('state', '') }}"
+                    placeholder="e.g. Iowa"
+                >
+            </label>
+
+            <label>
+                City
+                <input
+                    type="text"
+                    name="city"
+                    value="{{ request.args.get('city', '') }}"
+                    placeholder="e.g. Cedar Rapids"
+                >
+            </label>
+
+            <label>
+                Pincode / ZIP
+                <input
+                    type="text"
+                    name="pincode"
+                    value="{{ request.args.get('pincode', '') }}"
+                    placeholder="e.g. 52402"
+                >
+            </label>
+
+            <label>
+                Specialization
+                <input
+                    type="text"
+                    name="specialization"
+                    value="{{ request.args.get('specialization', '') }}"
+                    placeholder="e.g. Orthopedic"
+                >
+            </label>
+
+            <label>
+                Education
+                <input
+                    type="text"
+                    name="education"
+                    value="{{ request.args.get('education', '') }}"
+                    placeholder="e.g. MPT"
+                >
+            </label>
+
+            <label>
+                Experience
+                <input
+                    type="text"
+                    name="experience"
+                    value="{{ request.args.get('experience', '') }}"
+                    placeholder="e.g. 5 years"
+                >
+            </label>
+
+        </div>
+
+        <div style="margin-top:20px;">
+
+            <button class="btn" type="submit">
+                🔎 Find Physiotherapists
+            </button>
+
+            <a
+                class="btn secondary"
+                href="{{ url_for('find_physio') }}"
+            >
+                Clear
+            </a>
+
+        </div>
+
+    </form>
+</section>
+
+
+{% if searched %}
+
+<section style="margin-top:30px;">
+
+    <h2>Physiotherapists</h2>
+
+    {% if users %}
+
+    <div class="grid3">
+
+        {% for user in users %}
+
+        <div class="card">
+
+            {% if user.photo %}
+                <img
+                    src="{{ user.photo }}"
+                    alt="{{ user.name }}"
+                    style="width:80px;height:80px;border-radius:50%;object-fit:cover;"
+                >
+            {% endif %}
+
+            <h3>{{ user.name }}</h3>
+
+            {% if user.specialization %}
+                <p><strong>Specialization:</strong> {{ user.specialization }}</p>
+            {% endif %}
+
+            {% if user.education %}
+                <p><strong>Education:</strong> {{ user.education }}</p>
+            {% endif %}
+
+            {% if user.experience %}
+                <p><strong>Experience:</strong> {{ user.experience }}</p>
+            {% endif %}
+
+            {% if user.city or user.state %}
+                <p>
+                    <strong>Location:</strong>
+                    {% if user.city %}{{ user.city }}{% endif %}
+                    {% if user.city and user.state %}, {% endif %}
+                    {% if user.state %}{{ user.state }}{% endif %}
+                </p>
+            {% endif %}
+
+            {% if user.pincode %}
+                <p><strong>Pincode / ZIP:</strong> {{ user.pincode }}</p>
+            {% endif %}
+
+            <a
+                class="btn"
+                href="{{ url_for('public_physio', user_id=user.id) }}"
+            >
+                View Profile
+            </a>
+
+        </div>
+
+        {% endfor %}
+
+    </div>
+
+    {% else %}
+
+    <div class="card">
+        <h3>No physiotherapists found</h3>
+        <p class="muted">
+            Try changing your search criteria or searching by another field.
+        </p>
+    </div>
+
+    {% endif %}
+
+</section>
+
+{% endif %}
+
+{% endblock %}

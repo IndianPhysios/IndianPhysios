@@ -1,6 +1,114 @@
-{% extends "base.html" %}{% block title %}Messages · Indian Physios{% endblock %}{% block content %}
-<div class="row"><div><h1>💬 Messages</h1><p class="muted">Private conversations with your Indian Physios connections.</p></div></div>
+{% extends "base.html" %}
+
+{% block title %}Messages · Indian Physios{% endblock %}
+
+{% block content %}
+
+<div class="row">
+    <div>
+        <h1>💬 Messages</h1>
+        <p class="muted">
+            Your conversations and patient inquiries.
+        </p>
+    </div>
+</div>
+
+
+{% if patient_inquiries %}
+
+<h2 style="margin-top:30px;">🩺 Patient Inquiries</h2>
+
+{% for inquiry in patient_inquiries %}
+
+<a
+    class="card"
+    style="display:block;text-decoration:none;color:inherit;margin-bottom:15px;"
+    href="{{ url_for('patient_inquiry', inquiry_id=inquiry.id) }}"
+>
+
+    <div class="row">
+
+        <div>
+            <h2 style="margin:0;">
+                {{ inquiry.patient_name }}
+
+                {% if not inquiry.read_at %}
+                    <span class="notification-badge">NEW</span>
+                {% endif %}
+            </h2>
+
+            <small>
+                {{ inquiry.patient_email }}
+            </small>
+        </div>
+
+        <small>
+            {{ inquiry.created_at.replace('T',' ') }}
+        </small>
+
+    </div>
+
+    <p style="margin-bottom:0;">
+        {{ inquiry.body }}
+    </p>
+
+</a>
+
+{% endfor %}
+
+{% endif %}
+
+
 {% if conversations %}
-{% for c in conversations %}<a class="card" style="display:block;text-decoration:none;color:inherit" href="{{url_for('message_user', user_id=c.other_id)}}"><div class="row"><div><h2 style="margin:0">{{c.name}}</h2><small>{{c.specialization or 'Physiotherapist'}}{% if c.city %} · {{c.city}}{% endif %}</small></div><small>{{c.created_at.replace('T',' ')}}</small></div><p style="margin-bottom:0">{{c.body[:120]}}{{'…' if c.body|length > 120 else ''}}</p></a>{% endfor %}
-{% else %}<div class="card"><h2>No messages yet</h2><p>Connect with another physiotherapist, then use their profile or a Home Visit post to start a private conversation.</p></div>{% endif %}
+
+<h2 style="margin-top:30px;">💬 Professional Conversations</h2>
+
+{% for c in conversations %}
+
+<a
+    class="card"
+    style="display:block;text-decoration:none;color:inherit;margin-bottom:15px;"
+    href="{{ url_for('message_user', user_id=c.other_id) }}"
+>
+
+    <div class="row">
+
+        <div>
+            <h2 style="margin:0;">
+                {{ c.name }}
+            </h2>
+
+            <small>
+                {{ c.specialization or 'Physiotherapist' }}
+                {% if c.city %} · {{ c.city }}{% endif %}
+            </small>
+        </div>
+
+        <small>
+            {{ c.created_at.replace('T',' ') }}
+        </small>
+
+    </div>
+
+    <p style="margin-bottom:0;">
+        {{ c.body[:120] }}
+        {{ '…' if c.body|length > 120 else '' }}
+    </p>
+
+</a>
+
+{% endfor %}
+
+{% elif not patient_inquiries %}
+
+<div class="card">
+    <h2>No messages yet</h2>
+    <p>
+        Connect with another physiotherapist or receive a patient inquiry
+        to start a conversation.
+    </p>
+</div>
+
+{% endif %}
+
 {% endblock %}

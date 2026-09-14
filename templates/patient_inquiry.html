@@ -1,0 +1,51 @@
+{% extends "base.html" %}
+
+{% block title %}Patient Inquiry · Indian Physios{% endblock %}
+
+{% block content %}
+
+<section class="hero">
+    <div>
+        <span class="pill">🩺 Patient Inquiry</span>
+        <h1>{{ inquiry.patient_name }}</h1>
+        <p>{{ inquiry.patient_email }}</p>
+    </div>
+</section>
+
+<section class="card">
+
+    <h2>Message</h2>
+
+    <div style="
+        background:#f5f7fb;
+        border-radius:12px;
+        padding:20px;
+        margin-top:15px;
+        white-space:pre-wrap;
+    ">{{ inquiry.body }}</div>
+
+    <p class="muted" style="margin-top:15px;">
+        Received: {{ inquiry.created_at.replace('T',' ') }}
+    </p>
+
+    <div style="margin-top:25px;">
+
+        <a
+            class="btn"
+            href="mailto:{{ inquiry.patient_email }}?subject=Re: Indian Physios Physiotherapy Inquiry"
+        >
+            ✉️ Reply by Email
+        </a>
+
+        <a
+            class="btn secondary"
+            href="{{ url_for('messages') }}"
+        >
+            ← Back to Messages
+        </a>
+
+    </div>
+
+</section>
+
+{% endblock %}

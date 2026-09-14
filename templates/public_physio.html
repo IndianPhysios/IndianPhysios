@@ -1,0 +1,100 @@
+{% extends "base.html" %}
+
+{% block title %}{{ user.name }} · Indian Physios{% endblock %}
+
+{% block content %}
+
+<section class="hero">
+    <div>
+        <span class="pill">🩺 Physiotherapist Profile</span>
+
+        <h1>{{ user.name }}</h1>
+
+        {% if user.specialization %}
+            <p><strong>{{ user.specialization }}</strong></p>
+        {% endif %}
+
+        {% if user.city or user.state %}
+            <p>
+                {% if user.city %}{{ user.city }}{% endif %}
+                {% if user.city and user.state %}, {% endif %}
+                {% if user.state %}{{ user.state }}{% endif %}
+            </p>
+        {% endif %}
+    </div>
+</section>
+
+<section class="card">
+
+    {% if user.photo %}
+        <img
+            src="{{ user.photo }}"
+            alt="{{ user.name }}"
+            style="width:120px;height:120px;border-radius:50%;object-fit:cover;margin-bottom:20px;"
+        >
+    {% endif %}
+
+    <h2>Professional Information</h2>
+
+    {% if user.specialization %}
+        <p><strong>Specialization:</strong> {{ user.specialization }}</p>
+    {% endif %}
+
+    {% if user.education %}
+        <p><strong>Education:</strong> {{ user.education }}</p>
+    {% endif %}
+
+    {% if user.experience %}
+        <p><strong>Experience:</strong> {{ user.experience }}</p>
+    {% endif %}
+
+    {% if user.city or user.state %}
+        <p>
+            <strong>Location:</strong>
+            {% if user.city %}{{ user.city }}{% endif %}
+            {% if user.city and user.state %}, {% endif %}
+            {% if user.state %}{{ user.state }}{% endif %}
+        </p>
+    {% endif %}
+
+    {% if user.pincode %}
+        <p><strong>Pincode / ZIP:</strong> {{ user.pincode }}</p>
+    {% endif %}
+
+    {% if user.clinic %}
+        <p><strong>Clinic:</strong> {{ user.clinic }}</p>
+    {% endif %}
+
+    {% if user.bio %}
+        <h3>About</h3>
+        <p>{{ user.bio }}</p>
+    {% endif %}
+
+    {% if user.website %}
+        <p>
+            <strong>Website:</strong>
+            <a href="{{ user.website }}" target="_blank" rel="noopener">
+                {{ user.website }}
+            </a>
+        </p>
+    {% endif %}
+
+    <div style="margin-top:25px;">
+        <a
+            class="btn"
+            href="{{ url_for('patient_message', user_id=user.id) }}"
+        >
+            ✉️ Send a Message
+        </a>
+
+        <a
+            class="btn secondary"
+            href="{{ url_for('find_physio') }}"
+        >
+            ← Back to Search
+        </a>
+    </div>
+
+</section>
+
+{% endblock %}

@@ -1,4 +1,7 @@
 import os, re, secrets, sqlite3, smtplib, json, urllib.request, urllib.error
+from dotenv import load_dotenv
+
+load_dotenv()
 from email.message import EmailMessage
 from datetime import datetime, timedelta
 from functools import wraps
@@ -95,7 +98,7 @@ def init_db():
         CREATE TABLE IF NOT EXISTS home_visits (id BIGSERIAL PRIMARY KEY, user_id BIGINT NOT NULL, location TEXT NOT NULL, diagnosis TEXT NOT NULL, physio_need TEXT NOT NULL, details TEXT NOT NULL, pincode TEXT NOT NULL DEFAULT '', created_at TEXT NOT NULL);
         CREATE TABLE IF NOT EXISTS notifications (id BIGSERIAL PRIMARY KEY, user_id BIGINT NOT NULL, home_visit_id BIGINT, title TEXT NOT NULL, body TEXT NOT NULL, created_at TEXT NOT NULL, read_at TEXT);
         CREATE TABLE IF NOT EXISTS events (id BIGSERIAL PRIMARY KEY, user_id BIGINT NOT NULL, title TEXT NOT NULL, location TEXT NOT NULL, event_date TEXT NOT NULL, description TEXT NOT NULL, created_at TEXT NOT NULL);
-        CREATE TABLE IF NOT EXISTS messages (id BIGSERIAL PRIMARY KEY, sender_id BIGINT NOT NULL, receiver_id BIGINT NOT NULL, body TEXT NOT NULL, created_at TEXT NOT NULL, read_at TEXT);
+        CREATE TABLE IF NOT EXISTS messages (id BIGSERIAL PRIMARY KEY, sender_id BIGINT NOT NULL, receiver_id BIGINT NOT NULL, body TEXT NOT NULL, created_at TEXT NOT NULL, read_at TEXT); CREATE TABLE IF NOT EXISTS patient_inquiries (id BIGSERIAL PRIMARY KEY, physio_id BIGINT NOT NULL, patient_name TEXT NOT NULL, patient_email TEXT NOT NULL, body TEXT NOT NULL, created_at TEXT NOT NULL, read_at TEXT);
         CREATE TABLE IF NOT EXISTS admin_audit_log (id BIGSERIAL PRIMARY KEY, admin_user_id BIGINT NOT NULL, action TEXT NOT NULL, target_user_id BIGINT, details TEXT, created_at TEXT NOT NULL);
         """)
     else:
@@ -108,7 +111,7 @@ def init_db():
         CREATE TABLE IF NOT EXISTS home_visits (id INTEGER PRIMARY KEY AUTOINCREMENT, user_id INTEGER NOT NULL, location TEXT NOT NULL, diagnosis TEXT NOT NULL, physio_need TEXT NOT NULL, details TEXT NOT NULL, pincode TEXT NOT NULL DEFAULT '', created_at TEXT NOT NULL);
         CREATE TABLE IF NOT EXISTS notifications (id INTEGER PRIMARY KEY AUTOINCREMENT, user_id INTEGER NOT NULL, home_visit_id INTEGER, title TEXT NOT NULL, body TEXT NOT NULL, created_at TEXT NOT NULL, read_at TEXT);
         CREATE TABLE IF NOT EXISTS events (id INTEGER PRIMARY KEY AUTOINCREMENT, user_id INTEGER NOT NULL, title TEXT NOT NULL, location TEXT NOT NULL, event_date TEXT NOT NULL, description TEXT NOT NULL, created_at TEXT NOT NULL);
-        CREATE TABLE IF NOT EXISTS messages (id INTEGER PRIMARY KEY AUTOINCREMENT, sender_id INTEGER NOT NULL, receiver_id INTEGER NOT NULL, body TEXT NOT NULL, created_at TEXT NOT NULL, read_at TEXT);
+        CREATE TABLE IF NOT EXISTS messages (id INTEGER PRIMARY KEY AUTOINCREMENT, sender_id INTEGER NOT NULL, receiver_id INTEGER NOT NULL, body TEXT NOT NULL, created_at TEXT NOT NULL, read_at TEXT); CREATE TABLE IF NOT EXISTS patient_inquiries (id INTEGER PRIMARY KEY AUTOINCREMENT, physio_id INTEGER NOT NULL, patient_name TEXT NOT NULL, patient_email TEXT NOT NULL, body TEXT NOT NULL, created_at TEXT NOT NULL, read_at TEXT);
         CREATE TABLE IF NOT EXISTS admin_audit_log (id INTEGER PRIMARY KEY AUTOINCREMENT, admin_user_id INTEGER NOT NULL, action TEXT NOT NULL, target_user_id INTEGER, details TEXT, created_at TEXT NOT NULL);
         """)
         cols = {r["name"] for r in c.execute("PRAGMA table_info(users)").fetchall()}
@@ -160,7 +163,9 @@ def csrf_value():
 def security_checks():
     if request.method == "POST":
         token = request.form.get("csrf_token") or request.headers.get("X-CSRF-Token")
-        if not token or not secrets.compare_digest(token, session.get("csrf", "")):
+        expected = session.get("csrf", "")
+        print("CSRF DEBUG:", bool(token), len(token or ""), len(expected), bool(token and expected and secrets.compare_digest(token, expected)))
+        if not token or not secrets.compare_digest(token, expected):
             abort(400, "Invalid security token. Please refresh the page and try again.")
         if request.content_length and request.content_length > 3 * 1024 * 1024:
             abort(413)
@@ -181,6 +186,8 @@ def inject():
     if u:
         c=db()
         unread=c.execute("SELECT COUNT(*) AS n FROM messages WHERE receiver_id=? AND read_at IS NULL",(u["id"],)).fetchone()["n"]
+        unread_patient=c.execute("SELECT COUNT(*) AS n FROM patient_inquiries WHERE physio_id=? AND read_at IS NULL",(u["id"],)).fetchone()["n"]
+        unread += unread_patient
         unread_notifications=c.execute("SELECT COUNT(*) AS n FROM notifications WHERE user_id=? AND read_at IS NULL",(u["id"],)).fetchone()["n"]
         c.close()
     return {"current_user":u,"unread_messages":unread,"unread_notifications":unread_notifications,"csrf_token":csrf_value()}
@@ -352,8 +359,59 @@ def dashboard():
     login_redirect = require_login()
     if login_redirect:
         return login_redirect
+
     u = current_user()
-    return render_template("profile.html", user=u)
+    c = db()
+
+    connection_count = c.execute("""
+        SELECT COUNT(*) AS n
+        FROM connections
+        WHERE (requester_id=? OR receiver_id=?)
+          AND status='accepted'
+    """, (u["id"], u["id"])).fetchone()["n"]
+
+    post_count = c.execute("""
+        SELECT COUNT(*) AS n
+        FROM posts
+        WHERE user_id=?
+    """, (u["id"],)).fetchone()["n"]
+
+    event_count = c.execute("""
+        SELECT COUNT(*) AS n
+        FROM events
+        WHERE user_id=?
+    """, (u["id"],)).fetchone()["n"]
+
+    unread_messages = c.execute("""
+        SELECT COUNT(*) AS n
+        FROM messages
+        WHERE receiver_id=? AND read_at IS NULL
+    """, (u["id"],)).fetchone()["n"]
+
+    unread_patient_inquiries = c.execute("""
+        SELECT COUNT(*) AS n
+        FROM patient_inquiries
+        WHERE physio_id=? AND read_at IS NULL
+    """, (u["id"],)).fetchone()["n"]
+
+    unread_notifications = c.execute("""
+        SELECT COUNT(*) AS n
+        FROM notifications
+        WHERE user_id=? AND read_at IS NULL
+    """, (u["id"],)).fetchone()["n"]
+
+    c.close()
+
+    return render_template(
+        "dashboard.html",
+        user=u,
+        connection_count=connection_count,
+        post_count=post_count,
+        event_count=event_count,
+        unread_messages=unread_messages,
+        unread_patient_inquiries=unread_patient_inquiries,
+        unread_notifications=unread_notifications
+    )
 
 @app.route("/profile/<int:user_id>")
 def profile(user_id):
@@ -376,6 +434,171 @@ def directory():
     c.close(); return render_template("directory.html",users=users,q=q,state=state,pincode=pincode,specialization=specialization)
 
 # Keep the existing connection, messaging, community, jobs, home visits, notifications, events and admin routes.
+@app.route("/find-physio")
+def find_physio():
+    name = request.args.get("name", "").strip()
+    state = request.args.get("state", "").strip()
+    city = request.args.get("city", "").strip()
+    pincode = request.args.get("pincode", "").strip()
+    specialization = request.args.get("specialization", "").strip()
+    education = request.args.get("education", "").strip()
+    experience = request.args.get("experience", "").strip()
+
+    criteria = [
+        name,
+        state,
+        city,
+        pincode,
+        specialization,
+        education,
+        experience,
+    ]
+
+    users = []
+    searched = any(criteria)
+
+    if searched:
+        conditions = [
+            "verified_email=1",
+            "disabled=0"
+        ]
+        params = []
+
+        search_fields = [
+            ("name", name),
+            ("state", state),
+            ("city", city),
+            ("pincode", pincode),
+            ("specialization", specialization),
+            ("education", education),
+            ("experience", experience),
+        ]
+
+        for column, value in search_fields:
+            if value:
+                conditions.append(
+                    f"LOWER(TRIM(COALESCE({column}, ''))) LIKE LOWER(?)"
+                )
+                params.append(f"%{value}%")
+
+        c = db()
+
+        query = f"""
+            SELECT
+                id,
+                name,
+                specialization,
+                education,
+                experience,
+                city,
+                state,
+                pincode,
+                photo
+            FROM users
+            WHERE {' AND '.join(conditions)}
+            ORDER BY name
+        """
+
+        users = c.execute(query, tuple(params)).fetchall()
+        c.close()
+
+    return render_template(
+        "find_physio.html",
+        users=users,
+        searched=searched
+    )
+
+@app.route("/public-physio/<int:user_id>")
+def public_physio(user_id):
+    c = db()
+
+    user = c.execute("""
+        SELECT id, name, specialization, education,
+               experience, city, state, pincode,
+               photo, bio, clinic, website
+        FROM users
+        WHERE id=? AND verified_email=1 AND disabled=0
+    """, (user_id,)).fetchone()
+
+    c.close()
+
+    if not user:
+        abort(404)
+
+    return render_template(
+        "public_physio.html",
+        user=user
+    )
+
+@app.route("/patient-message/<int:user_id>", methods=["GET", "POST"])
+def patient_message(user_id):
+    c = db()
+
+    physio = c.execute("""
+        SELECT id, name, specialization, city, state
+        FROM users
+        WHERE id=? AND verified_email=1 AND disabled=0
+    """, (user_id,)).fetchone()
+
+    c.close()
+
+    if not physio:
+        abort(404)
+
+    if request.method == "POST":
+        patient_name = request.form.get("patient_name", "").strip()
+        patient_email = request.form.get("patient_email", "").strip()
+        body = request.form.get("body", "").strip()
+
+        if not patient_name or len(patient_name) > 120:
+            flash("Please enter your name.", "error")
+            return render_template("patient_message.html", physio=physio)
+
+        if not patient_email or len(patient_email) > 254 or "@" not in patient_email:
+            flash("Please enter a valid email address.", "error")
+            return render_template("patient_message.html", physio=physio)
+
+        if not body or len(body) > 5000:
+            flash("Message must be between 1 and 5,000 characters.", "error")
+            return render_template("patient_message.html", physio=physio)
+
+        if not rate_limit(
+            f"patient_message:{request.remote_addr}",
+            5,
+            3600
+        ):
+            flash("Too many messages. Please try again later.", "error")
+            return render_template("patient_message.html", physio=physio)
+
+        c = db()
+        c.execute("""
+            INSERT INTO patient_inquiries
+            (physio_id, patient_name, patient_email, body, created_at)
+            VALUES (?, ?, ?, ?, ?)
+        """, (
+            physio["id"],
+            patient_name,
+            patient_email,
+            body,
+            now()
+        ))
+        c.commit()
+        c.close()
+
+        flash(
+            "Your message has been sent to the physiotherapist.",
+            "success"
+        )
+
+        return redirect(
+            url_for("public_physio", user_id=physio["id"])
+        )
+
+    return render_template(
+        "patient_message.html",
+        physio=physio
+    )
+
 @app.route("/connect/<int:user_id>",methods=["POST"])
 def connect(user_id):
     login_redirect = require_login()
@@ -422,7 +645,22 @@ def messages():
     if login_redirect:
         return login_redirect
     u=current_user()
-    c=db(); rows=c.execute("SELECT x.*,users.name,users.photo,users.specialization,users.city FROM (SELECT m.*,CASE WHEN m.sender_id=? THEN m.receiver_id ELSE m.sender_id END AS other_id FROM messages m WHERE m.sender_id=? OR m.receiver_id=?) x JOIN users ON users.id=x.other_id WHERE x.id IN (SELECT MAX(m2.id) FROM messages m2 WHERE m2.sender_id=? OR m2.receiver_id=? GROUP BY CASE WHEN m2.sender_id=? THEN m2.receiver_id ELSE m2.sender_id END) ORDER BY x.id DESC",(u["id"],u["id"],u["id"],u["id"],u["id"],u["id"])).fetchall(); c.close(); return render_template("messages.html",conversations=rows)
+    c=db()
+    rows=c.execute("SELECT x.*,users.name,users.photo,users.specialization,users.city FROM (SELECT m.*,CASE WHEN m.sender_id=? THEN m.receiver_id ELSE m.sender_id END AS other_id FROM messages m WHERE m.sender_id=? OR m.receiver_id=?) x JOIN users ON users.id=x.other_id WHERE x.id IN (SELECT MAX(m2.id) FROM messages m2 WHERE m2.sender_id=? OR m2.receiver_id=? GROUP BY CASE WHEN m2.sender_id=? THEN m2.receiver_id ELSE m2.sender_id END) ORDER BY x.id DESC",(u["id"],u["id"],u["id"],u["id"],u["id"],u["id"])).fetchall()
+
+    patient_inquiries=c.execute("""
+        SELECT id, patient_name, patient_email, body, created_at, read_at
+        FROM patient_inquiries
+        WHERE physio_id=?
+        ORDER BY id DESC
+    """,(u["id"],)).fetchall()
+
+    c.close()
+    return render_template(
+        "messages.html",
+        conversations=rows,
+        patient_inquiries=patient_inquiries
+    )
 
 @app.route("/messages/<int:user_id>",methods=["GET","POST"])
 def message_user(user_id):
@@ -440,6 +678,39 @@ def message_user(user_id):
             if not body or len(body)>5000:flash("Message must be between 1 and 5,000 characters.","error")
             else:c=db();c.execute("INSERT INTO messages(sender_id,receiver_id,body,created_at) VALUES(?,?,?,?)",(u["id"],user_id,body,now()));c.commit();c.close();return redirect(url_for("message_user",user_id=user_id))
     c=db();thread=c.execute("SELECT messages.*,users.name AS sender_name FROM messages JOIN users ON users.id=messages.sender_id WHERE (sender_id=? AND receiver_id=?) OR (sender_id=? AND receiver_id=?) ORDER BY messages.id",(u["id"],user_id,user_id,u["id"])).fetchall();c.execute("UPDATE messages SET read_at=? WHERE sender_id=? AND receiver_id=? AND read_at IS NULL",(now(),user_id,u["id"]));c.commit();c.close();return render_template("message_thread.html",target=target,thread=thread)
+
+@app.route("/patient-inquiry/<int:inquiry_id>")
+def patient_inquiry(inquiry_id):
+    login_redirect = require_login()
+    if login_redirect:
+        return login_redirect
+
+    u = current_user()
+
+    c = db()
+    inquiry = c.execute("""
+        SELECT *
+        FROM patient_inquiries
+        WHERE id=? AND physio_id=?
+    """, (inquiry_id, u["id"])).fetchone()
+
+    if not inquiry:
+        c.close()
+        abort(404)
+
+    c.execute("""
+        UPDATE patient_inquiries
+        SET read_at=?
+        WHERE id=? AND physio_id=?
+    """, (now(), inquiry_id, u["id"]))
+
+    c.commit()
+    c.close()
+
+    return render_template(
+        "patient_inquiry.html",
+        inquiry=inquiry
+    )
 
 @app.route("/community",methods=["GET","POST"])
 def community():

@@ -1,0 +1,93 @@
+{% extends "base.html" %}
+
+{% block title %}Contact {{ physio.name }} · Indian Physios{% endblock %}
+
+{% block content %}
+
+<section class="hero">
+    <div>
+        <span class="pill">✉️ Contact Physiotherapist</span>
+
+        <h1>Send a Message to {{ physio.name }}</h1>
+
+        {% if physio.specialization %}
+            <p><strong>{{ physio.specialization }}</strong></p>
+        {% endif %}
+
+        {% if physio.city or physio.state %}
+            <p>
+                {% if physio.city %}{{ physio.city }}{% endif %}
+                {% if physio.city and physio.state %}, {% endif %}
+                {% if physio.state %}{{ physio.state }}{% endif %}
+            </p>
+        {% endif %}
+    </div>
+</section>
+
+<section class="card">
+
+    <h2>Your Message</h2>
+
+    <p class="muted">
+        You do not need to create an account. Enter your details below
+        and your message will be sent to the physiotherapist.
+    </p>
+
+    <form method="post">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+
+        <label>
+            Your Name
+            <input
+                type="text"
+                name="patient_name"
+                maxlength="120"
+                required
+                placeholder="Enter your name"
+                value="{{ request.form.get('patient_name', '') }}"
+            >
+        </label>
+
+        <label>
+            Your Email
+            <input
+                type="email"
+                name="patient_email"
+                maxlength="254"
+                required
+                placeholder="you@example.com"
+                value="{{ request.form.get('patient_email', '') }}"
+            >
+        </label>
+
+        <label>
+            Message
+            <textarea
+                name="body"
+                maxlength="5000"
+                rows="7"
+                required
+                placeholder="Write your message..."
+            >{{ request.form.get('body', '') }}</textarea>
+        </label>
+
+        <div style="margin-top:20px;">
+
+            <button class="btn" type="submit">
+                ✉️ Send Message
+            </button>
+
+            <a
+                class="btn secondary"
+                href="{{ url_for('public_physio', user_id=physio.id) }}"
+            >
+                ← Back to Profile
+            </a>
+
+        </div>
+
+    </form>
+
+</section>
+
+{% endblock %}

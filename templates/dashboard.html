@@ -1,0 +1,251 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard · Indian Physios{% endblock %}
+
+{% block content %}
+
+<div class="v10-dashboard">
+
+    <!-- WELCOME -->
+    <section class="dash-welcome">
+        <div>
+            <span class="dash-eyebrow">INDIAN PHYSIOS</span>
+            <h1>Welcome back, {{ user.name }} 👋</h1>
+            <p>Your professional physiotherapy community, all in one place.</p>
+        </div>
+
+        <a class="btn" href="{{ url_for('edit_profile') }}">
+            ✎ Edit Profile
+        </a>
+    </section>
+
+    <!-- QUICK ACTIONS -->
+    <section class="dash-section">
+        <div class="dash-section-title">
+            <div>
+                <h2>Quick Actions</h2>
+                <p>Jump directly to what you need.</p>
+            </div>
+        </div>
+
+        <div class="dash-action-grid">
+
+            <a class="dash-action-card" href="{{ url_for('directory') }}">
+                <span class="dash-action-icon">👥</span>
+                <div>
+                    <strong>Find Physiotherapists</strong>
+                    <span>Connect with professionals</span>
+                </div>
+                <b>→</b>
+            </a>
+
+            <a class="dash-action-card" href="{{ url_for('messages') }}">
+                <span class="dash-action-icon">✉</span>
+                <div>
+                    <strong>Messages</strong>
+                    <span>
+                        {% if unread_messages %}
+                            {{ unread_messages }} unread message{% if unread_messages != 1 %}s{% endif %}
+                        {% else %}
+                            View your conversations
+                        {% endif %}
+                    </span>
+                </div>
+                {% if unread_messages %}
+                    <em>🔴 {{ unread_messages }}</em>
+                {% endif %}
+                <b>→</b>
+            </a>
+
+            <a class="dash-action-card" href="{{ url_for('notifications') }}">
+                <span class="dash-action-icon">🔔</span>
+                <div>
+                    <strong>Notifications</strong>
+                    <span>
+                        {% if unread_notifications %}
+                            {{ unread_notifications }} new notification{% if unread_notifications != 1 %}s{% endif %}
+                        {% else %}
+                            View your notifications
+                        {% endif %}
+                    </span>
+                </div>
+                {% if unread_notifications %}
+                    <em>🔴 {{ unread_notifications }}</em>
+                {% endif %}
+                <b>→</b>
+            </a>
+
+            <a class="dash-action-card" href="{{ url_for('connections') }}">
+                <span class="dash-action-icon">🤝</span>
+                <div>
+                    <strong>Connections</strong>
+                    <span>Manage your professional network</span>
+                </div>
+                <b>→</b>
+            </a>
+
+            <a class="dash-action-card" href="{{ url_for('jobs') }}">
+                <span class="dash-action-icon">💼</span>
+                <div>
+                    <strong>Jobs</strong>
+                    <span>Explore physiotherapy opportunities</span>
+                </div>
+                <b>→</b>
+            </a>
+
+            <a class="dash-action-card" href="{{ url_for('events') }}">
+                <span class="dash-action-icon">📅</span>
+                <div>
+                    <strong>Events</strong>
+                    <span>Discover upcoming events</span>
+                </div>
+                <b>→</b>
+            </a>
+
+        </div>
+    </section>
+
+    <!-- YOUR ACTIVITY -->
+    <section class="dash-section dash-activity-section">
+        <div class="dash-section-title">
+            <div>
+                <h2>Your Activity</h2>
+                <p>A quick look at your Indian Physios activity.</p>
+            </div>
+        </div>
+
+        <div class="dash-stat-grid">
+
+            <a class="dash-stat-card" href="{{ url_for('connections') }}">
+                <span class="dash-stat-icon">🤝</span>
+                <strong>{{ connection_count }}</strong>
+                <span>Connections</span>
+            </a>
+
+            <a class="dash-stat-card" href="{{ url_for('community') }}">
+                <span class="dash-stat-icon">📝</span>
+                <strong>{{ post_count }}</strong>
+                <span>Posts</span>
+            </a>
+
+            <a class="dash-stat-card" href="{{ url_for('events') }}">
+                <span class="dash-stat-icon">📅</span>
+                <strong>{{ event_count }}</strong>
+                <span>Events</span>
+            </a>
+
+            <a class="dash-stat-card" href="{{ url_for('messages') }}">
+                <span class="dash-stat-icon">✉️</span>
+                <strong>{{ unread_messages }}</strong>
+                <span>Unread Messages</span>
+            </a>
+
+            <a class="dash-stat-card" href="{{ url_for('messages') }}">
+                <span class="dash-stat-icon">📩</span>
+                <strong>{{ unread_patient_inquiries }}</strong>
+                <span>Patient Inquiries</span>
+            </a>
+
+            <a class="dash-stat-card" href="{{ url_for('notifications') }}">
+                <span class="dash-stat-icon">🔔</span>
+                <strong>{{ unread_notifications }}</strong>
+                <span>Notifications</span>
+            </a>
+
+        </div>
+    </section>
+
+    <!-- PROFILE OVERVIEW -->
+    <section class="dash-main-grid">
+
+        <div class="dash-profile-card">
+
+            <div class="dash-card-header">
+                <div>
+                    <span class="dash-card-label">YOUR PROFILE</span>
+                    <h2>Professional Profile</h2>
+                </div>
+
+                <a href="{{ url_for('profile', user_id=user.id) }}">
+                    View Profile →
+                </a>
+            </div>
+
+            <div class="dash-profile-body">
+
+                <div class="dash-avatar">
+                    {% if user.photo %}
+                        <img src="{{ url_for('profile_media', user_id=user.id) }}"
+                             alt="Profile photo">
+                    {% else %}
+                        {{ user.name[:1].upper() }}
+                    {% endif %}
+                </div>
+
+                <div class="dash-profile-info">
+                    <h3>{{ user.name }}</h3>
+
+                    <p>
+                        {{ user.specialization or "Physiotherapist" }}
+                        {% if user.qualification %}
+                            · {{ user.qualification }}
+                        {% endif %}
+                    </p>
+
+                    {% if user.city or user.state %}
+                        <span>
+                            📍 {{ user.city or "" }}
+                            {% if user.city and user.state %}, {% endif %}
+                            {{ user.state or "" }}
+                        </span>
+                    {% endif %}
+
+                    {% if user.verified_email %}
+                        <div class="dash-verified">✓ Email verified</div>
+                    {% endif %}
+                </div>
+
+            </div>
+
+            <div class="dash-profile-footer">
+                <a class="btn secondary" href="{{ url_for('edit_profile') }}">
+                    ✎ Update Profile
+                </a>
+                <a class="btn" href="{{ url_for('profile', user_id=user.id) }}">
+                    View My Profile
+                </a>
+            </div>
+
+        </div>
+
+        <div class="dash-info-card">
+
+            <span class="dash-card-label">GET STARTED</span>
+            <h2>Grow your professional network</h2>
+
+            <p>
+                Connect with physiotherapists, discover opportunities,
+                participate in events and build your professional presence.
+            </p>
+
+            <div class="dash-info-links">
+                <a href="{{ url_for('community') }}">
+                    <span>♣</span>
+                    Community
+                    <b>→</b>
+                </a>
+
+                <a href="{{ url_for('home_visits') }}">
+                    <span>🏠</span>
+                    Home Visits
+                    <b>→</b>
+                </a>
+            </div>
+
+        </div>
+
+    </section>
+
+</div>
+
+{% endblock %}

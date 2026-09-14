@@ -12,103 +12,156 @@
 <header class="site-header">
 <div class="wrap nav">
 
-<a class="brand" href="{{url_for('home')}}">
-    <span>Indian</span>
-    <span>Physios</span>
-</a>
+    <a class="brand" href="{{ url_for('home') }}">
+        <span>Indian</span>
+        <span>Physios</span>
+    </a>
 
-{% if current_user %}
+    {% if current_user %}
 
-<nav class="main-nav">
+    <button class="mobile-menu-toggle"
+            type="button"
+            aria-label="Open navigation"
+            aria-expanded="false"
+            onclick="toggleMobileMenu()">
+        <span></span>
+        <span></span>
+        <span></span>
+    </button>
 
-<div class="nav-primary">
+    <nav class="main-nav v10-main-nav" id="main-navigation">
 
-<a class="{% if request.endpoint == 'dashboard' %}active{% endif %}" href="{{url_for('dashboard')}}">
-<span class="nav-icon">⌂</span>
-<span>Home</span>
-</a>
+        <div class="nav-primary">
 
-<a class="{% if request.endpoint == 'directory' %}active{% endif %}" href="{{url_for('directory')}}">
-<span class="nav-icon">♧</span>
-<span>Directory</span>
-</a>
+            <a class="{% if request.endpoint == 'dashboard' %}active{% endif %}"
+               href="{{ url_for('dashboard') }}">
+                <span class="nav-icon">⌂</span>
+                <span>Home</span>
+            </a>
 
-<a class="{% if request.endpoint == 'community' %}active{% endif %}" href="{{url_for('community')}}">
-<span class="nav-icon">♣</span>
-<span>Community</span>
-</a>
+            <a class="{% if request.endpoint == 'directory' %}active{% endif %}"
+               href="{{ url_for('directory') }}">
+                <span class="nav-icon">♧</span>
+                <span>Directory</span>
+            </a>
 
-<a class="{% if request.endpoint == 'jobs' %}active{% endif %}" href="{{url_for('jobs')}}">
-<span class="nav-icon">▣</span>
-<span>Jobs</span>
-</a>
+            <a class="{% if request.endpoint == 'community' %}active{% endif %}"
+               href="{{ url_for('community') }}">
+                <span class="nav-icon">♣</span>
+                <span>Community</span>
+            </a>
 
-<a class="{% if request.endpoint == 'home_visits' %}active{% endif %}" href="{{url_for('home_visits')}}">
-<span class="nav-icon">⌂</span>
-<span>Home Visits</span>
-</a>
+            <a class="{% if request.endpoint == 'jobs' %}active{% endif %}"
+               href="{{ url_for('jobs') }}">
+                <span class="nav-icon">▣</span>
+                <span>Jobs</span>
+            </a>
 
-<a class="{% if request.endpoint == 'events' %}active{% endif %}" href="{{url_for('events')}}">
-<span class="nav-icon">▣</span>
-<span>Events</span>
-</a>
+            <a class="{% if request.endpoint == 'home_visits' %}active{% endif %}"
+               href="{{ url_for('home_visits') }}">
+                <span class="nav-icon">⌂</span>
+                <span>Home Visits</span>
+            </a>
 
-<a class="{% if request.endpoint == 'about' %}active{% endif %}" href="{{url_for('about')}}">
-<span class="nav-icon">ⓘ</span>
-<span>About</span>
-</a>
+            <a class="{% if request.endpoint == 'events' %}active{% endif %}"
+               href="{{ url_for('events') }}">
+                <span class="nav-icon">▣</span>
+                <span>Events</span>
+            </a>
 
-</div>
+            <a class="{% if request.endpoint == 'about' %}active{% endif %}"
+               href="{{ url_for('about') }}">
+                <span class="nav-icon">ⓘ</span>
+                <span>About</span>
+            </a>
 
-<div class="nav-secondary">
+        </div>
 
-<a href="{{url_for('profile',user_id=current_user['id'])}}">
-<span class="nav-icon">♙</span>
-<span>My Profile</span>
-</a>
+        <div class="nav-secondary">
 
-<a href="{{url_for('connections')}}">
-<span class="nav-icon">♣</span>
-<span>Connections</span>
-</a>
+            <a href="{{ url_for('profile', user_id=current_user['id']) }}">
+                <span class="nav-icon">♙</span>
+                <span>My Profile</span>
+            </a>
 
-<a href="{{url_for('notifications')}}">
-<span class="nav-icon">♟</span>
-<span>Notifications</span>
-{% if unread_notifications %}
-<span class="notification-badge">{{unread_notifications}}</span>
-{% endif %}
-</a>
+            <a href="{{ url_for('connections') }}">
+                <span class="nav-icon">♣</span>
+                <span>Connections</span>
+            </a>
 
-<a href="{{url_for('messages')}}">
-<span class="nav-icon">✉</span>
-<span>Messages</span>
-{% if unread_messages %}
-<span class="notification-badge">{{unread_messages}}</span>
-{% endif %}
-</a>
+            <a href="{{ url_for('notifications') }}">
+                <span class="nav-icon">♟</span>
+                <span>Notifications</span>
+                {% if unread_notifications %}
+                    <span class="notification-badge">{{ unread_notifications }}</span>
+                {% endif %}
+            </a>
 
-<a href="{{url_for('logout')}}">
-<span class="nav-icon">↪</span>
-<span>Logout</span>
-</a>
+            <a href="{{ url_for('messages') }}">
+                <span class="nav-icon">✉</span>
+                <span>Messages</span>
+                {% if unread_messages %}
+                    <span class="notification-badge">{{ unread_messages }}</span>
+                {% endif %}
+            </a>
 
-</div>
+            <a href="{{ url_for('logout') }}">
+                <span class="nav-icon">↪</span>
+                <span>Logout</span>
+            </a>
 
-</nav>
+        </div>
 
-{% else %}
+    </nav>
 
-<nav class="main-nav logged-out-nav">
-<a href="{{url_for('about')}}">About</a>
-<a href="{{url_for('login')}}">Login</a>
-<a class="btn small" href="{{url_for('register')}}">Join Free</a>
-</nav>
+    {% else %}
 
-{% endif %}
+    <button class="mobile-menu-toggle public-mobile-toggle"
+            type="button"
+            aria-label="Open navigation"
+            aria-expanded="false"
+            onclick="toggleMobileMenu()">
+        <span></span>
+        <span></span>
+        <span></span>
+    </button>
+
+    <nav class="main-nav logged-out-nav" id="main-navigation">
+
+        <a href="{{ url_for('home') }}">Home</a>
+
+        <a href="{{ url_for('about') }}">About</a>
+
+        <a href="{{ url_for('events') }}">Events</a>
+
+        <a href="{{ url_for('find_physio') }}">
+            Find a Physiotherapist
+        </a>
+
+        <a href="{{ url_for('login') }}">Login</a>
+
+        <a class="btn small" href="{{ url_for('register') }}">
+            Join Free
+        </a>
+
+    </nav>
+
+    {% endif %}
 
 </div>
 </header>
+
+<script>
+function toggleMobileMenu() {
+    const nav = document.getElementById("main-navigation");
+    const button = document.querySelector(".mobile-menu-toggle");
+
+    if (!nav || !button) return;
+
+    const open = nav.classList.toggle("mobile-open");
+    button.setAttribute("aria-expanded", open ? "true" : "false");
+}
+</script>
 
 <main class="wrap">
 
