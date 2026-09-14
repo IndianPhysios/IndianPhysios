@@ -2274,3 +2274,14 @@
         display:flex !important;
     }
 }
+
+/* V10 FINAL: logged-out mobile navigation must override legacy .main-nav */
+@media (max-width: 900px) {
+    .logged-out-nav {
+        display: none !important;
+    }
+
+    .logged-out-nav.mobile-open {
+        display: flex !important;
+    }
+}
