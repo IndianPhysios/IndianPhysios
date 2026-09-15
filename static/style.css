@@ -2285,3 +2285,382 @@
         display: flex !important;
     }
 }
+
+/* V10 PHYSIOTHERAPY VISUAL BACKGROUND */
+body {
+    background-image:
+        linear-gradient(rgba(248, 250, 253, 0.48), rgba(248, 250, 253, 0.58)),
+        url("/static/images/physio-bg.png");
+    background-size: cover;
+    background-position: center top;
+    background-attachment: fixed;
+    background-repeat: no-repeat;
+}
+
+@media (max-width: 900px) {
+    body {
+        background-attachment: scroll;
+        background-position: center top;
+    }
+}
+
+/* V10 MOBILE PHYSIOTHERAPY HERO */
+@media (max-width: 900px) {
+    .v10-hero {
+        position: relative;
+        overflow: hidden;
+        background:
+            linear-gradient(
+                90deg,
+                rgba(248, 250, 253, 0.92) 0%,
+                rgba(248, 250, 253, 0.72) 42%,
+                rgba(248, 250, 253, 0.28) 100%
+            ),
+            url("/static/images/physio-bg.png");
+        background-size: cover;
+        background-position: 68% center;
+        background-repeat: no-repeat;
+    }
+
+    .v10-hero-copy {
+        position: relative;
+        z-index: 2;
+    }
+
+    .v10-finder {
+        position: relative;
+        z-index: 3;
+    }
+}
+
+/* V10 MOBILE HERO - CLEAN PHOTO LAYOUT */
+@media (max-width: 900px) {
+
+    body {
+        background-image: none !important;
+        background-color: #f8fafd !important;
+    }
+
+    .v10-hero {
+        display: block !important;
+        position: relative;
+        overflow: hidden;
+        background: none !important;
+    }
+
+    .v10-hero-copy {
+        position: relative;
+        z-index: 1;
+        min-height: 560px;
+        padding: 55px 22px 35px !important;
+        background-image:
+            linear-gradient(
+                90deg,
+                rgba(248,250,253,0.96) 0%,
+                rgba(248,250,253,0.82) 38%,
+                rgba(248,250,253,0.25) 72%,
+                rgba(248,250,253,0.08) 100%
+            ),
+            url("/static/images/physio-bg.png");
+        background-size: cover;
+        background-position: 72% center;
+        background-repeat: no-repeat;
+    }
+
+    .v10-finder {
+        position: relative;
+        z-index: 2;
+        margin-top: 0 !important;
+        background: #ffffff;
+    }
+
+    .v10-finder-head,
+    .v10-finder-form {
+        background: #ffffff;
+    }
+}
+
+/* V10 DESKTOP PHYSIOTHERAPY HERO BACKGROUND */
+@media (min-width: 901px) {
+    .v10-hero {
+        background:
+            linear-gradient(
+                90deg,
+                rgba(248, 250, 253, 0.20) 0%,
+                rgba(248, 250, 253, 0.48) 42%,
+                rgba(248, 250, 253, 0.78) 70%,
+                rgba(248, 250, 253, 0.88) 100%
+            ),
+            url("/static/images/physio-bg-desktop.png");
+        background-size: cover;
+        background-position: center center;
+        background-repeat: no-repeat;
+    }
+}
+
+/* V10 DESKTOP - CLEAN THREE-COLUMN PHYSIOTHERAPY HERO */
+@media (min-width: 1151px) {
+
+    body {
+        background-image: none !important;
+        background-color: #f8fafd !important;
+    }
+
+    .v10-hero {
+        display: grid !important;
+        grid-template-columns: 0.78fr 0.95fr 1.05fr !important;
+        gap: 28px !important;
+        align-items: center !important;
+        padding: 45px 35px 40px !important;
+        background: transparent !important;
+    }
+
+    .v10-hero::before {
+        content: "";
+        display: block;
+        grid-column: 1;
+        grid-row: 1;
+        width: 100%;
+        height: 560px;
+        min-height: 560px;
+        border-radius: 24px;
+        background-image:
+            linear-gradient(
+                180deg,
+                rgba(255,255,255,0.04),
+                rgba(255,255,255,0.10)
+            ),
+            url("/static/images/physio-bg-desktop.png");
+        background-size: cover;
+        background-position: center center;
+        background-repeat: no-repeat;
+        box-shadow: 0 16px 40px rgba(16, 29, 58, 0.10);
+    }
+
+    .v10-hero-copy {
+        grid-column: 2;
+        grid-row: 1;
+        position: relative;
+        z-index: 2;
+        padding: 15px 0;
+    }
+
+    .v10-finder {
+        grid-column: 3;
+        grid-row: 1;
+        position: relative;
+        z-index: 2;
+    }
+}
+
+/* V10 DASHBOARD - CLEAN PHYSIOTHERAPY VISUAL */
+.dash-welcome {
+    position: relative;
+    overflow: hidden;
+    background:
+        linear-gradient(
+            90deg,
+            rgba(238,246,255,1) 0%,
+            rgba(255,255,255,0.96) 58%,
+            rgba(255,255,255,0.72) 100%
+        ),
+        url("/static/images/physio-bg-desktop.png");
+    background-size: cover;
+    background-position: right center;
+    background-repeat: no-repeat;
+}
+
+.dash-welcome > * {
+    position: relative;
+    z-index: 2;
+}
+
+@media (max-width: 900px) {
+    .dash-welcome {
+        background:
+            linear-gradient(
+                180deg,
+                rgba(238,246,255,0.97) 0%,
+                rgba(255,255,255,0.92) 100%
+            ),
+            url("/static/images/physio-bg.png");
+        background-size: cover;
+        background-position: center center;
+        background-repeat: no-repeat;
+    }
+}
+
+/* V10 HOMEPAGE - RESTORE CLEAN 2-COLUMN DESKTOP */
+@media (min-width: 901px) {
+
+    .v10-hero {
+        display: grid !important;
+        grid-template-columns: 1.05fr 1fr !important;
+        gap: 45px !important;
+        align-items: center !important;
+        padding: 55px 35px 40px !important;
+        background:
+            linear-gradient(
+                90deg,
+                rgba(248,250,253,0.82) 0%,
+                rgba(248,250,253,0.72) 45%,
+                rgba(248,250,253,0.90) 100%
+            ),
+            url("/static/images/physio-bg-desktop.png") !important;
+        background-size: cover !important;
+        background-position: center center !important;
+        background-repeat: no-repeat !important;
+    }
+
+    .v10-hero::before {
+        display: none !important;
+        content: none !important;
+    }
+
+    .v10-hero-copy {
+        grid-column: 1 !important;
+        grid-row: 1 !important;
+        position: relative !important;
+        z-index: 2 !important;
+        padding: 0 !important;
+    }
+
+    .v10-finder {
+        grid-column: 2 !important;
+        grid-row: 1 !important;
+        position: relative !important;
+        z-index: 3 !important;
+        width: auto !important;
+    }
+
+    .v10-hero-copy h1 {
+        font-size: 56px !important;
+        line-height: 1.04 !important;
+    }
+
+    .v10-hero-copy p {
+        max-width: 650px !important;
+    }
+
+    .v10-hero-actions {
+        flex-wrap: wrap !important;
+    }
+}
+
+/* V10 HOMEPAGE - WIDER DESKTOP CONTENT */
+@media (min-width: 901px) {
+
+    .v10-home {
+        width: calc(100% - 40px) !important;
+        max-width: 1600px !important;
+        margin-left: auto !important;
+        margin-right: auto !important;
+    }
+
+    .v10-hero {
+        width: 100% !important;
+        box-sizing: border-box !important;
+        padding-left: 20px !important;
+        padding-right: 20px !important;
+        gap: 55px !important;
+    }
+
+    .v10-audience {
+        padding-left: 20px !important;
+        padding-right: 20px !important;
+    }
+}
+
+/* V10 FINAL DESKTOP HOMEPAGE - FULL WIDTH 2 COLUMN */
+@media (min-width: 901px) {
+
+    .v10-home {
+        width: 100% !important;
+        max-width: none !important;
+        margin: 0 !important;
+    }
+
+    .v10-hero {
+        width: 100% !important;
+        max-width: none !important;
+        box-sizing: border-box !important;
+
+        display: grid !important;
+        grid-template-columns: minmax(0, 1.05fr) minmax(500px, 1fr) !important;
+        gap: 55px !important;
+
+        align-items: center !important;
+        padding: 55px 55px 40px !important;
+
+        background:
+            linear-gradient(
+                90deg,
+                rgba(248,250,253,0.82) 0%,
+                rgba(248,250,253,0.72) 45%,
+                rgba(248,250,253,0.90) 100%
+            ),
+            url("/static/images/physio-bg-desktop.png") !important;
+
+        background-size: cover !important;
+        background-position: center center !important;
+        background-repeat: no-repeat !important;
+    }
+
+    .v10-hero::before {
+        display: none !important;
+        content: none !important;
+    }
+
+    .v10-hero-copy {
+        grid-column: 1 !important;
+        grid-row: 1 !important;
+        width: 100% !important;
+        max-width: 700px !important;
+        padding: 0 !important;
+        position: relative !important;
+        z-index: 2 !important;
+    }
+
+    .v10-finder {
+        grid-column: 2 !important;
+        grid-row: 1 !important;
+        width: 100% !important;
+        max-width: 560px !important;
+        justify-self: end !important;
+        position: relative !important;
+        z-index: 3 !important;
+    }
+
+    .v10-hero-copy h1 {
+        font-size: 56px !important;
+        line-height: 1.04 !important;
+    }
+
+    .v10-hero-copy p {
+        max-width: 650px !important;
+    }
+
+    .v10-hero-actions {
+        display: flex !important;
+        flex-wrap: wrap !important;
+    }
+}
+
+
+/* V10 HOMEPAGE - REMOVE OUTER WRAP SIDE GAPS */
+@media (min-width: 901px) {
+    main.wrap:has(.v10-home) {
+        width: 100% !important;
+        max-width: none !important;
+        margin: 0 !important;
+        padding-left: 0 !important;
+        padding-right: 0 !important;
+        box-sizing: border-box !important;
+    }
+
+    main.wrap:has(.v10-home) .v10-home {
+        width: 100% !important;
+        max-width: none !important;
+        margin: 0 !important;
+    }
+}
