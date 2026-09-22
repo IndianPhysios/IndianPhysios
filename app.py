@@ -457,10 +457,6 @@ def reset_password(token):
 def logout():
  session.clear(); return redirect(url_for("home"))
 
-@app.route("/logout")
-
-def logout(): session.clear(); return redirect(url_for("home"))
-
 @app.route("/profile/edit",methods=["GET","POST"])
 def edit_profile():
     login_redirect = require_login()
