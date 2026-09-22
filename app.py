@@ -92,6 +92,7 @@ def init_db():
         c.executescript("""
         CREATE TABLE IF NOT EXISTS users (id BIGSERIAL PRIMARY KEY, name TEXT NOT NULL, email TEXT UNIQUE NOT NULL, password_hash TEXT NOT NULL, phone TEXT, qualification TEXT, specialization TEXT, state TEXT, city TEXT, pincode TEXT, registration_no TEXT, verified_email INTEGER DEFAULT 0, verified_physio INTEGER DEFAULT 0, disabled INTEGER DEFAULT 0, photo TEXT, photo_data BYTEA, photo_mime TEXT, bio TEXT, clinic TEXT, experience TEXT, education TEXT, website TEXT, created_at TEXT NOT NULL);
         CREATE TABLE IF NOT EXISTS verification_tokens (id BIGSERIAL PRIMARY KEY, user_id BIGINT NOT NULL, token TEXT UNIQUE NOT NULL, expires_at TEXT NOT NULL);
+        CREATE TABLE IF NOT EXISTS password_reset_tokens (id BIGSERIAL PRIMARY KEY, user_id BIGINT NOT NULL, token TEXT UNIQUE NOT NULL, expires_at TEXT NOT NULL);
         CREATE TABLE IF NOT EXISTS connections (id BIGSERIAL PRIMARY KEY, requester_id BIGINT NOT NULL, receiver_id BIGINT NOT NULL, status TEXT NOT NULL DEFAULT 'pending', created_at TEXT NOT NULL, UNIQUE(requester_id, receiver_id));
         CREATE TABLE IF NOT EXISTS posts (id BIGSERIAL PRIMARY KEY, user_id BIGINT NOT NULL, title TEXT NOT NULL, body TEXT NOT NULL, created_at TEXT NOT NULL);
         CREATE TABLE IF NOT EXISTS jobs (id BIGSERIAL PRIMARY KEY, user_id BIGINT NOT NULL, title TEXT NOT NULL, organization TEXT NOT NULL, city TEXT NOT NULL, description TEXT NOT NULL, created_at TEXT NOT NULL);
@@ -105,6 +106,7 @@ def init_db():
         c.executescript("""
         CREATE TABLE IF NOT EXISTS users (id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT NOT NULL, email TEXT UNIQUE NOT NULL, password_hash TEXT NOT NULL, phone TEXT, qualification TEXT, specialization TEXT, state TEXT, city TEXT, pincode TEXT, registration_no TEXT, verified_email INTEGER DEFAULT 0, verified_physio INTEGER DEFAULT 0, disabled INTEGER DEFAULT 0, photo TEXT, photo_data BLOB, photo_mime TEXT, bio TEXT, clinic TEXT, experience TEXT, education TEXT, website TEXT, created_at TEXT NOT NULL);
         CREATE TABLE IF NOT EXISTS verification_tokens (id INTEGER PRIMARY KEY AUTOINCREMENT, user_id INTEGER NOT NULL, token TEXT UNIQUE NOT NULL, expires_at TEXT NOT NULL);
+        CREATE TABLE IF NOT EXISTS password_reset_tokens (id INTEGER PRIMARY KEY AUTOINCREMENT, user_id INTEGER NOT NULL, token TEXT UNIQUE NOT NULL, expires_at TEXT NOT NULL);
         CREATE TABLE IF NOT EXISTS connections (id INTEGER PRIMARY KEY AUTOINCREMENT, requester_id INTEGER NOT NULL, receiver_id INTEGER NOT NULL, status TEXT NOT NULL DEFAULT 'pending', created_at TEXT NOT NULL, UNIQUE(requester_id, receiver_id));
         CREATE TABLE IF NOT EXISTS posts (id INTEGER PRIMARY KEY AUTOINCREMENT, user_id INTEGER NOT NULL, title TEXT NOT NULL, body TEXT NOT NULL, created_at TEXT NOT NULL);
         CREATE TABLE IF NOT EXISTS jobs (id INTEGER PRIMARY KEY AUTOINCREMENT, user_id INTEGER NOT NULL, title TEXT NOT NULL, organization TEXT NOT NULL, city TEXT NOT NULL, description TEXT NOT NULL, created_at TEXT NOT NULL);
@@ -322,7 +324,141 @@ def login():
         session.clear(); session["user_id"]=u["id"]; return redirect(url_for("profile",user_id=u["id"]))
     return render_template("login.html")
 
+@app.route("/forgot-password", methods=["GET", "POST"])
+def forgot_password():
+    if request.method == "POST":
+        if not rate_limit("forgot-password:" + request.remote_addr, 5, 3600):
+            flash("Too many password reset requests. Please wait and try again later.", "error")
+            return redirect(url_for("forgot_password"))
+
+        email = request.form.get("email", "").strip().lower()
+
+        if not email:
+            flash("Please enter your email address.", "error")
+            return redirect(url_for("forgot_password"))
+
+        c = db()
+        user = c.execute(
+            "SELECT id, email, name FROM users WHERE email=?",
+            (email,)
+        ).fetchone()
+
+        if user:
+            c.execute(
+                "DELETE FROM password_reset_tokens WHERE user_id=?",
+                (user["id"],)
+            )
+
+            token = make_token()
+            expires = (datetime.utcnow() + timedelta(hours=1)).isoformat()
+
+            c.execute(
+                "INSERT INTO password_reset_tokens(user_id, token, expires_at) VALUES(?,?,?)",
+                (user["id"], token, expires)
+            )
+            c.commit()
+            c.close()
+
+            link = url_for("reset_password", token=token, _external=True)
+
+            sent = False
+            try:
+                sent = send_email(
+                    user["email"],
+                    "Reset your Indian Physios password",
+                    f"""Hello {user["name"]},
+
+We received a request to reset your Indian Physios password.
+
+Use the link below to create a new password:
+
+{link}
+
+This link will expire in 1 hour.
+
+If you did not request a password reset, you can safely ignore this email.
+
+Indian Physios"""
+                )
+            except Exception as e:
+                app.logger.exception(e)
+
+            if not sent:
+                print("PASSWORD RESET LINK:", link)
+
+        flash(
+            "If an account exists with that email, a password reset link has been sent.",
+            "success"
+        )
+        return redirect(url_for("login"))
+
+    return render_template("forgot_password.html")
+
+
+@app.route("/reset-password/<token>", methods=["GET", "POST"])
+def reset_password(token):
+    c = db()
+    row = c.execute(
+        "SELECT user_id, expires_at FROM password_reset_tokens WHERE token=?",
+        (token,)
+    ).fetchone()
+
+    if not row:
+        c.close()
+        flash("Invalid or expired password reset link.", "error")
+        return redirect(url_for("login"))
+
+    if datetime.fromisoformat(row["expires_at"]) < datetime.utcnow():
+        c.execute(
+            "DELETE FROM password_reset_tokens WHERE token=?",
+            (token,)
+        )
+        c.commit()
+        c.close()
+        flash("This password reset link has expired.", "error")
+        return redirect(url_for("forgot_password"))
+
+    if request.method == "POST":
+        password = request.form.get("password", "")
+        confirm_password = request.form.get("confirm_password", "")
+
+        if len(password) < 8:
+            c.close()
+            flash("Password must be at least 8 characters long.", "error")
+            return redirect(url_for("reset_password", token=token))
+
+        if password != confirm_password:
+            c.close()
+            flash("Passwords do not match.", "error")
+            return redirect(url_for("reset_password", token=token))
+
+        password_hash = generate_password_hash(password, method="pbkdf2:sha256")
+
+        c.execute(
+            "UPDATE users SET password_hash=? WHERE id=?",
+            (password_hash, row["user_id"])
+        )
+        c.execute(
+            "DELETE FROM password_reset_tokens WHERE token=?",
+            (token,)
+        )
+        c.commit()
+        c.close()
+
+        session.clear()
+        flash("Your password has been reset successfully. You can now log in.", "success")
+        return redirect(url_for("login"))
+
+    c.close()
+    return render_template("reset_password.html", token=token)
+
+
 @app.route("/logout")
+def logout():
+ session.clear(); return redirect(url_for("home"))
+
+@app.route("/logout")
+
 def logout(): session.clear(); return redirect(url_for("home"))
 
 @app.route("/profile/edit",methods=["GET","POST"])
